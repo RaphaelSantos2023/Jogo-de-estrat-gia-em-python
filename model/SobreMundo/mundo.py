@@ -62,7 +62,7 @@ class Relogio:
 
   def passar_tempo(self,cidadaos):
       """Avança um segundo no tempo e atualiza as horas, minutos, dias."""
-      self.minuto += 1 #random.randint(5,10)
+      self.minuto += random.randint(1,5) #random.randint(5,10)
 
       # Se passaram 60 minutos, aumentamos as horas
       if self.minuto >= 60:

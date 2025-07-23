@@ -53,7 +53,7 @@ class Profissao:
                   humano.y -= 1
       else:
           print("Não encontrou")
-          humano.acao_moment[0] = "Socializar"
+          humano.acao_momento[0] = "Socializar"
 
   def mover_dentro_area(self,humano, mapa,ax, ay,max_x,min_x,max_y,min_y):
     if ax != None and ay != None:
@@ -127,6 +127,14 @@ class Pescador(Profissao):
             humano.acao_momento.append("Guardar")
         else:
             self.Movimento_(ax,ay,max_x,min_x,max_y,min_y,humano)
+    def acao(self, mapa, humano,ax,ay):
+        quantidade = random.randint(1,10)
+        for i in range(quantidade):
+            humano.inventario.append(self.simbolo)
+            
+            humano.acao_momento.pop(0)
+            humano.acao_momento.append("Guardar")
+
 
 class Fazendeiro(Profissao):
   def __init__(self):

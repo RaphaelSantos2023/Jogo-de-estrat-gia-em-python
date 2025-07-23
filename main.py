@@ -188,45 +188,45 @@ class main:
             print(f"{Fore.CYAN}4.{Style.RESET_ALL} 🔙 Voltar")
             print(f"{Fore.GREEN}{'-'*40}{Style.RESET_ALL}")
 
-            try:
-                opcao = int(input(f"{Fore.YELLOW}Escolha uma opção: {Style.RESET_ALL}"))
-                self.limpar_tela()
-                match opcao:
-                    case 1:
-                        self.verDadoCidadao()
-                    case 2:
-                        self.ListarCidadaos()
-                    case 3:
-                        self.MostarStatus()
-                    case 4:
-                        break
-                    case _:
-                        print("Opção inválida.")
-            except:
-                print("Entrada inválida.")
-                self.getch()
+            #try:
+            opcao = int(input(f"{Fore.YELLOW}Escolha uma opção: {Style.RESET_ALL}"))
+            self.limpar_tela()
+            match opcao:
+                case 1:
+                    self.verDadoCidadao()
+                case 2:
+                    self.ListarCidadaos()
+                case 3:
+                    self.MostarStatus()
+                case 4:
+                    break
+                case _:
+                    print("Opção inválida.")
+            #except:
+                #print("Entrada inválida.")
+                #self.getch()
 
     # ---> Lista de cidadãos
 
     def printCidadao(self):
         for i, h in enumerate(self.reino_Jogador.cidadaos):
-            print(f"{Fore.CYAN}[{i}]{Style.RESET_ALL} {h.nome}")
-        print(f"{Fore.RED}[{len(self.reino_Jogador.cidadaos)}]{Style.RESET_ALL} Voltar")
+            print(f"{Fore.CYAN}{i}{Style.RESET_ALL}. {h.nome}")
+        print(f"{Fore.RED}{len(self.reino_Jogador.cidadaos)}{Style.RESET_ALL}. Voltar")
         print(f"{Fore.GREEN}{'-'*40}{Style.RESET_ALL}")
 
     def verDadoCidadao(self):
         self.SubMenuTitulo("🔍 Escolha um cidadão para ver os dados")
         self.printCidadao()
-        try:
-            opcao = int(input('R: '))
-            if opcao == len(self.reino_Jogador.cidadaos):
-                return
-            self.limpar_tela()
-            self.DescricaoCidadao(opcao)
-            self.getch()
-        except:
-            print("Entrada inválida.")
-            self.getch()
+        #try:
+        opcao = int(input('R: '))
+        if opcao == len(self.reino_Jogador.cidadaos):
+            return
+        self.limpar_tela()
+        self.DescricaoCidadao(opcao)
+        self.getch()
+        #except:
+            #print("Entrada inválida.")
+            #self.getch()
 
     def DescricaoCidadao(self,id):
         print(f"{Fore.BLUE}📋 Dados de {self.reino_Jogador.cidadaos[id].nome}:{Style.RESET_ALL}")
@@ -276,19 +276,19 @@ class main:
             print("2. Criar Ordens")
             print("3. Voltar")
 
-            try:
-                opcao = int(input('R: '))
-                self.limpar_tela()
-                match opcao:
-                    case 1:
-                        self.DesignarProfissao()
-                    case 2:
-                        self.DarOrdens()
-                    case 3:
-                        break
-            except:
-                print("Entrada inválida.")
-                self.getch()
+            #try:
+            opcao = int(input('R: '))
+            self.limpar_tela()
+            match opcao:
+                case 1:
+                    self.DesignarProfissao()
+                case 2:
+                    self.DarOrdens()
+                case 3:
+                    break
+            #except:
+                #print("Entrada inválida.")
+                #self.getch()
 
     def DesignarProfissao(self):
         self.limpar_tela()
@@ -330,34 +330,29 @@ class main:
         self.limpar_tela()
         self.tituloDoMenu("📜 Gerenciar Ordens")
 
-        if not self.reino_Jogador.ordens:
-            self.definirTipoTrabalho()
-            return
+        print(f"{Fore.LIGHTCYAN_EX}1{Style.RESET_ALL}. Adicionar ordem")
+        print(f"{Fore.LIGHTCYAN_EX}2{Style.RESET_ALL}. Ver ordem")
+        print(f"{Fore.LIGHTCYAN_EX}3{Style.RESET_ALL}. Cancelar ordem")
+        print(f"{Fore.LIGHTRED_EX}4{Style.RESET_ALL}. Voltar")
 
-        print(f"📋 Ordens ativas: {len(self.reino_Jogador.ordens)}")
-        print("1. Adicionar ordem")
-        print("2. Ver ordens")
-        print("3. Cancelar todas as ordens")
-        print("4. Voltar")
-
-        try:
-            opcao = int(input('R: '))
-            self.limpar_tela()
-            match opcao:
-                case 1:
-                    self.definirTipoTrabalho()
-                case 2:
-                    self.verOrdens()
-                    self.getch()
-                case 3:
-                    self.cancelarOrdem()
-                    print("Todas as ordens foram canceladas.")
-                    self.getch()
-                case 4:
-                    return
-        except:
-            print("Entrada inválida.")
-            self.getch()
+        #try:
+        opcao = int(input('R: '))
+        self.limpar_tela()
+        match opcao:
+            case 1:
+                self.definirTipoTrabalho()
+            case 2:
+                self.verOrdens()
+                self.getch()
+            case 3:
+                self.cancelarOrdem()
+                print("Todas as ordens foram canceladas.")
+                self.getch()
+            case 4:
+                return
+        #except:
+            #print("Entrada inválida.")
+            #self.getch()
 
     def definirTipoTrabalho(self):
         intencao = "Area"
@@ -366,32 +361,31 @@ class main:
         
     def colocarOrdem(self,intencao,max_x=-1,max_y=-1,min_x=-1,min_y=-1):
         Profissoes = self.mostrarOrdens()
+        #try:
+        opcao = int(input('Escolha uma ordem: '))
+        if opcao == len(Profissoes):
+            print("Voltando...")
+        else:
+            self.limpar_tela()
+            ordem = Profissoes[opcao]
+            print(f"ordem = Profissoes[opcao] {ordem}")
+            for cidadao in self.reino_Jogador.cidadaos:
+                if type(cidadao.profissos[0]) == type(ordem):
+                    cidadao.acao_momento[0] = "Trabalhar"
+                    cidadao.intencao =intencao
 
-        try:
-            opcao = int(input('Escolha uma ordem: '))
-            if opcao == len(Profissoes):
-                print("Voltando...")
-            else:
-                self.limpar_tela()
-                ordem = Profissoes[opcao]
-                for cidadao in self.reino_Jogador.cidadaos:
-                    if cidadao.profissos[0] == ordem:
-                        cidadao.acao_momento[0] = "Trabalhar"
-                        cidadao.intencao =intencao
+                    cidadao.max_x = max_x
+                    cidadao.min_x = min_x
+                    cidadao.max_y = max_y
+                    cidadao.min_y = min_y
 
-                        cidadao.max_x = max_x
-                        cidadao.min_x = min_x
-                        cidadao.max_y = max_y
-                        cidadao.min_y = min_y
-
-                        print(f"{cidadao.nome} foi designado para {ordem.nome}")
-                self.reino_Jogador.ordens.append(ordem)
-                print(f"✅ Ordem de {ordem.nome} adicionada com sucesso.")
-                    
-                self.getch()
-        except:
-            print("Entrada inválida.")
+                print(f"{cidadao.nome} foi designado para {ordem.nome}")
+            self.reino_Jogador.ordens.append(ordem)
+            print(f"✅ Ordem de {ordem.nome} adicionada com sucesso.")        
             self.getch()
+        #except:
+            #print("Entrada inválida.")
+            #self.getch()
 
     def  selectionar_area(self):
         self.exibir_mapa_com_coordenadas(self.matriz)
@@ -430,19 +424,12 @@ class main:
         self.reino_Jogador.ordens.clear()
 
     def mostrarOrdens(self):
-        Profissoes = self.getProfissoes()
+        Profissoes = self.reino_Jogador.getProfissoes()
         self.tituloDoMenu("➕ Selecionar Ordem")
-        for i, prof in enumerate(Profissoes):
-            print(f"[{Fore.CYAN}{i}{Style.RESET_ALL}] {prof.nome}")
-        print(f"[{Fore.RED}{len(Profissoes)}{Style.RESET_ALL}] Voltar")
-        return Profissoes
-
-    def getProfissoes(self):
-        Profissoes = []
-        for cidadao in self.reino_Jogador.cidadaos:
-            prof = cidadao.profissos[0]
-            if prof not in Profissoes:
-                Profissoes.append(prof)
+        print(f"Profissoes:{Profissoes}")
+        for i in range(len(Profissoes)):
+            print(f"{Fore.CYAN}{i}{Style.RESET_ALL}. {Profissoes[i].nome}")
+        print(f"{Fore.RED}{len(Profissoes)}{Style.RESET_ALL}. Voltar")
         return Profissoes
 
     # ---> Lista de Serviços especiais
@@ -504,11 +491,12 @@ class main:
             opcao = -1
 
             while opcao != len(templos):
+                self.limpar_tela()
                 self.tituloDoMenu("⛩️  Templos 🏛️")
             
                 for i in range(len(templos)):
                     print(f"{Fore.CYAN}{i}{Style.RESET_ALL}. {templos[i].nome_individual} - Divindade da(o) {templos[i].Divindade.dominio}{Style.RESET_ALL}")
-                print(f"[{len(templos)}] Voltar")
+                print(f"{Fore.RED}{len(templos)}. Voltar")
 
                 opcao = int(input("R:"))
 
@@ -557,8 +545,8 @@ class main:
                 print(f"{'═'*60}{Style.RESET_ALL}")
 
                 for i in range(len(construcao_com_animal.inventario)):
-                    print(f"{i}. {construcao_com_animal.inventario[i]['Nome'].nome}")
-                print(f'{len(construcao_com_animal.inventario)}. Continuar')
+                    print(f"{Fore.LIGHTCYAN_EX}{i}. {construcao_com_animal.inventario[i]['Nome'].nome}")
+                print(f'{Fore.RED}{len(construcao_com_animal.inventario)}. Continuar')
                 opcao_quantidade_pega = int(input("R: "))
 
                 if opcao_quantidade_pega != len(construcao_com_animal.inventario):
@@ -636,7 +624,6 @@ class main:
                 
             opcao = int(input('R: '))
             
-            self.limpar_tela()
             if opcao != len(self.reino_Jogador.cidadaos):
                 if not self.reino_Jogador.cidadaos[opcao].servico_militar:
                     self.SubMenuTitulo(f"{self.reino_Jogador.cidadaos[opcao].nome} foi recrutado")
@@ -644,12 +631,8 @@ class main:
                     self.reino_Jogador.exercito.exercito.append({"Soldado":self.reino_Jogador.cidadaos[opcao],"Ativo": False})
             
                 elif self.reino_Jogador.cidadaos[opcao].servico_militar:
-                   self.SubMenuTitulo(f"{self.reino_Jogador.cidadaos[opcao].nome} foi tirado do exercito")
                    self.reino_Jogador.cidadaos[opcao].servico_militar = False
                    self.reino_Jogador.exercito.exercito.remove({"Soldado":self.reino_Jogador.cidadaos[opcao],"Ativo": False})
-
-                print("Aperte qualquer tecla para continuar...")
-                self.getch()
             
     # ---> Contruções
 
@@ -819,13 +802,17 @@ class main:
         print(f"{Fore.BLUE}📘 Dados de {construcao.nome}:{Style.RESET_ALL}")
         if self.reino_Jogador.ouro >= construcao.preco_ouro:
             
-            print(f"Quantidade de ouro necessária: {construcao.preco_ouro}\n")
-            print(f"Quantidade de ouro do reino de {self.reino_Jogador.nome}: {self.reino_Jogador.ouro}")
-            print(f"Proseguir?")
-            opcao = input('R(Y/N): ')
+            print(f"Ouro necessária: {Fore.LIGHTYELLOW_EX}{construcao.preco_ouro}")
+            print(f"Seu banco: {Fore.LIGHTYELLOW_EX}{self.reino_Jogador.ouro}")
+            print(f"{Fore.YELLOW}{'_'*60}")
+
+            print(f"{Fore.LIGHTCYAN_EX}1{Style.RESET_ALL}. Proseguir")
+            print(f"{Fore.LIGHTRED_EX}2{Style.RESET_ALL}. Voltar")
+            opcao = int(input('R: '))
         
             match opcao:
-                case "Y":
+                case 1:
+                    print(f"construcao: {construcao}")
                     self.limpar_tela()
                     materiais_list = self.PegarMateriais()
                     if materiais_list != []:
@@ -839,7 +826,7 @@ class main:
                     else:
                         print("Você não tem materiais suficientes para construir essa construção.")
                     self.getch()
-                case "N":
+                case 2:
                     print("Voltando...")
         else:
             print("Você não tem ouro suficiente para construir essa construção.")
@@ -1026,7 +1013,7 @@ class main:
             print(Fore.CYAN + "=" * 40)
             
             for i, item in enumerate(lista_opcoes):
-                print(f"{Fore.GREEN} {i+1}. {Style.BRIGHT}- {item['Descricao']}")
+                print(f"{Fore.GREEN} {i+1}. {Style.BRIGHT} {item['Descricao']}")
 
             while True:
                 try:
@@ -1086,9 +1073,9 @@ class main:
     def ContinuarJogo(self):
         self.control.GerarMundo()
         self.limpar_tela()
-        nome, persona,nome_reino = self.criarRei()
+        nome = self.criarRei()
         self.limpar_tela()
-        self.criarReino(nome, persona,nome_reino)
+        self.criarReino(nome)
         self.control.MapaGerar(self.matriz, self.tamanho)
         self.control.ColocarObjetos(self.matriz, self.tamanho, self.QuantidadeObjetos,self.regiao_jogador, self.reino_Jogador)
         humanos = self.control.criarCidadãos(self.reino_Jogador, self.tamanho)
@@ -1104,39 +1091,35 @@ class main:
         print(f"{Fore.YELLOW}👑 Criação do Rei{Style.RESET_ALL}")
         nome = input('Digite seu nome: ')
         
-        persona = []
-
-        for j in range(3):
-            self.limpar_tela()
-            print(f"{Fore.CYAN}Escolha a personalidade do seu rei ({j+1}/3):{Style.RESET_ALL}")
-            for i in range(len(personalidade)):
-                print(f"{i+1}. {personalidade[i]}")
-            while True:
-                try:
-                    opcao = int(input('R: '))
-                    if 1 <= opcao <= len(personalidade):
-                        persona.append(personalidade[opcao - 1])
-                        break
-                    else:
-                        print("Número fora do intervalo.")
-                except ValueError:
-                    print("Digite um número válido.")
-        self.limpar_tela()
-        print(f"{Fore.YELLOW}👑 Digite o nome do reino{Style.RESET_ALL}")
-        nome_reino = input('R: ')
-        
-        return nome, persona,nome_reino
+        return nome
 
     def limpar_tela(self):
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def criarReino(self,nome, persona,nome_reino):
+    def criarReino(self,nome):
         
         dados_dificuldade = [
             {"dificuldade": "Fácil", "ouro": 100,"comida": 800, "populacao": 10},
             {"dificuldade": "Normal", "ouro": 50, "comida": 520, "populacao": 7},
             {"dificuldade": "Difícil", "ouro": 25, "comida": 250, "populacao": 5}
         ]
+        
+        print(f"{Fore.YELLOW}👑 Digite o nome do reino{Style.RESET_ALL}")
+        nome_reino = input('R: ')
+
+        persona_reino = [{"Nome":"Beligerante","Descrição": "A moral e o preparo do seu exercito é maior"},
+                         {"Nome":"Diplomatico","Descrição": "Te Favorece politicamente com outros reinos"},
+                         {"Nome":"Religioso","Descrição": "Sua relação com a magia é maior"},
+                         {"Nome":"Comerciante","Descrição": "Seus acordos e trocas comerciais são mais beneficas"},
+                         {"Nome":"Escrevista","Descrição": "Leva parte de exercitos derrotados como escravos"}
+                         ]
+
+        self.limpar_tela()
+        
+        print(f"{Fore.YELLOW}👑 Pelo que seu reino é conhecido?{Style.RESET_ALL}")
+        for i, item in enumerate(persona_reino):
+            print(f"{Fore.LIGHTCYAN_EX}{i+1}{Style.RESET_ALL}. {item["Nome"]}, {item["Descrição"]}")        
+        personalidade_reino = int(input('R: '))
 
         while True:
             self.limpar_tela()
@@ -1158,7 +1141,7 @@ class main:
             dados_dificuldade[opcao - 1]["comida"],
             4,
             nome,
-            persona,
+            persona_reino[personalidade_reino-1]["Nome"],
             self.humanos,nome_reino
         )
         

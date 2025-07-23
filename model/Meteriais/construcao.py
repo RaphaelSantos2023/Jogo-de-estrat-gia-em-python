@@ -144,27 +144,15 @@ class Demanda_tempo(Construcao):
                 pessoa.Dentro_estrutura = False
                 self.inventario.remove(pessoa)
     
-class Mina(Demanda_tempo):
-    def __init__(self, x, y, Material):
-        super().__init__("Mina", f"{Fore.LIGHTBLACK_EX}M{Style.RESET_ALL}", "Trabalho",Material, 25, 10,x,y,5)
+class Construcao_trabalho(Demanda_tempo):
+    def __init__(self,nome,simbolo,material,vida,quantidadeP,x,y,horas):
+        super().__init__(nome,simbolo, "Trabalho",material, vida, quantidadeP,x,y,horas)
         self.dia = 1
-        self.profissao_requerida = "Minerador"
-        self.minerios = [
-            (Pedra(),     1),
-            (Cobre(),     2),
-            (Estanho(),   3),
-            (Ferro(),     4),
-            (Níquel(),    5),
-            (Prata(),     6),
-            (Ouro(),      7),
-            (Platina(),   8),
-            (Titânio(),   9)
-        ]
+        self.profissao_requerida = ""
+        self.material_feito = []
     
     def acao_tempo(self,reino,matriz,relogio,regiao):
-        print("entrou no acao tempo")
         if relogio.hora == 6 or relogio.hora == 14:
-            print("Deviam ir trabalhar")
             for cidadao in reino.cidadaos:
                 if cidadao.profissos[0].nome == self.profissao_requerida:
                     self.movimentar(cidadao,matriz)
@@ -182,6 +170,26 @@ class Mina(Demanda_tempo):
         self.inventario.append(humano)
     
     def coletar(self, regiao):
+        return ""
+
+class Mina(Construcao_trabalho):
+    def __init__(self, x, y, Material):
+        super().__init__("Mina", f"{Fore.LIGHTBLACK_EX}M{Style.RESET_ALL}",Material, 25, 10,x,y,5)
+        self.dia = 1
+        self.profissao_requerida = "Minerador"
+        self.material_feito = [
+            (Pedra(),     1),
+            (Cobre(),     2),
+            (Estanho(),   3),
+            (Ferro(),     4),
+            (Níquel(),    5),
+            (Prata(),     6),
+            (Ouro(),      7),
+            (Platina(),   8),
+            (Titânio(),   9)
+        ]
+    
+    def coletar(self, regiao):
         nivel_sorte = regiao.riqueza_mineral
 
         for pessoa in self.inventario:
@@ -195,8 +203,7 @@ class Mina(Demanda_tempo):
                 pesos.append(peso_final)
             
             minerio = random.choices([m[0] for m in self.minerios], weights=pesos, k=1)[0]
-            pessoa.inventario.append(minerio)
-        
+            pessoa.inventario.append(minerio)        
 
 class Cabana(Construcao):
   def __init__(self, x, y, Material):
@@ -255,6 +262,23 @@ class Templo(Construcao):
 
     def AcaoDivina(self,id,alvo):
         self.Divindade.Acao(id,alvo)
+    
+    def ChecarBencaos(self):
+        Text = "\nBençãos:"
+        Text += f"\n{Fore.LIGHTGREEN_EX}1{Style.RESET_ALL}. {self.Divindade.Bencao_Descricao["Ordem"]}"
+        Text += f"\n{Fore.LIGHTBLACK_EX}2{Style.RESET_ALL}. {self.Divindade.Bencao_Descricao["Neutro"]}"
+        Text += f"\n{Fore.LIGHTMAGENTA_EX}3{Style.RESET_ALL}. {self.Divindade.Bencao_Descricao["Caos"]}"
+
+        return Text
+    
+    def Descricao(self):
+        dados = f"Nome: {self.nome} \nTipo: {self.tipo} \nVida: {self.vida}\n"
+        interior = self.Interior()
+        bencaos = self.ChecarBencaos()
+        
+        text =  dados + bencaos + interior + "\n"
+        text  += "-"*30
+        return text
 
 class Armazem(Construcao):
     def __init__(self, x, y, Material):
@@ -320,7 +344,7 @@ class Armazem_Comida(Construcao):
 
 class Plantacao(Demanda_tempo):
     def __init__(self,tipo_cultivo,dia):
-        super().__init__("Plantação", f"{Fore.YELLOW}_{Style.RESET_ALL}", "Crescimento", Terra(), 10, 0,0,0,0)
+        super().__init__("Plantação", f"\033[38;5;94m_\033[0m", "Crescimento", Terra(), 10, 0,0,0,0)
         self.pronta = False
         self.dia = dia
         self.ultimo_dia = 0
@@ -391,10 +415,7 @@ class Construir:
             print("Você não tem recursos suficientes para construir isso.")
         
     def construir(self,x,y,mapa,reino,Material):
-        print(f"-{x} {y}-")
         construcao = self.construcao(x,y,Material["Nome"])
-
-        print(f"{construcao.x} {construcao.y}")
         mapa[x][y] = construcao.simbolo
         reino.construcoes.append(construcao)
     

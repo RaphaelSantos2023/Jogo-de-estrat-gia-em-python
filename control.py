@@ -384,7 +384,7 @@ class Control:
         self.Reproduzir_animais(reino,relogio)
 
     def Evento_Definir(self,reino, relogio, pausado,Mapa):
-        if relogio.dia % 20 == 0 and self.evento.ultimo_evento_dia != relogio.dia:
+        if relogio.dia % 1 == 0 and self.evento.ultimo_evento_dia != relogio.dia:
             self.evento.ultimo_evento_dia = relogio.dia
             self.evento.evento_estacional(self.Mundo_criado, reino,Mapa)
             self.limpar_tela()
@@ -729,14 +729,27 @@ class Control:
 
 
     def setReinoJogador(self,ouro,populacao,comida,Equipamento_militar,nome,personalidade,humanos,nome_reino):
+
+        def Gerar_Caracteristicas():
+            match personalidade:
+                case "Beligerante":
+                    reino_jogador.exercito.moral += 75
+                    reino_jogador.exercito.preparo += 1
+                    reino_jogador.exercito.moralMax += 75
+                case "Religioso":
+                    reino_jogador.magia += 2
+                        
         reino_jogador = Reino(self.raca_humana)
         reino_jogador.criarReino(ouro,populacao,comida,Equipamento_militar,nome_reino)
+        reino_jogador.gerarRei()
         reino_jogador.construcoes.append(Posto_Comercio(Madeira(),0,0))
         reino_jogador.construcoes.append(Armazem(Madeira(),0,0))
         reino_jogador.construcoes.append(Armazem_Comida(Madeira(),0,0))
         reino_jogador.construcoes.append(Armazem_materiais(Madeira(),0,0))
         
-        reino_jogador.rei.DesignarNomePersonalidade(nome,personalidade)
+        reino_jogador.rei.nome = nome
+        reino_jogador.Caracteristicas = personalidade
+        Gerar_Caracteristicas()
 
         reino_jogador.setCidadoes(humanos)
         return reino_jogador

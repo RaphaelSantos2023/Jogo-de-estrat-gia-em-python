@@ -83,27 +83,27 @@ class Evento:
 
             exercito_invasor = Exercito()
 
-            exercito_invasor.CriarExercito_Invasao(raca,jogador)
+            exercito_invasor.CriarExercito_Invasao(raca,mundo.religiao.deuses,jogador)
             
-            ex_in = exercito_invasor.selecionar_soldados_ativos()
+            exercito_invasor.selecionar_soldados_ativos()
             
-            exercito_jogador = jogador.exercito.selecionar_soldados_ativos()
-            quantidade_ativos = self.contar_ativos(exercito_jogador)
+            jogador.exercito.selecionar_soldados_ativos()
+            quantidade_ativos = self.contar_ativos(jogador.exercito.exercito)
 
             return {
                 "descricao": lambda: f"O {Fore.RED}{exercito_invasor.nome}{Style.RESET_ALL}, um exercito de {Fore.RED} {len(exercito_invasor.exercito)} {raca.nome} {Style.RESET_ALL} marchão em sua direção.\nCom o ataque, dos {Fore.GREEN}{len(jogador.exercito.exercito)}{Style.RESET_ALL}, conseguimos reunir {Fore.GREEN}{quantidade_ativos}{Style.RESET_ALL}.\nO que devemos fazer?",
                 "opcoes": [
                     (
                         f"Avançar",
-                        lambda j: self.Combater(exercito_jogador,ex_in,"Avançar",jogador,mapa)
+                        lambda j: self.Combater(jogador.exercito,exercito_invasor,"Avançar",jogador,mapa)
                     ),
                     (
                         f"Manter posição",
-                        lambda j: self.Combater(exercito_jogador,ex_in,"Manter posição",jogador,mapa)
+                        lambda j: self.Combater(jogador.exercito,exercito_invasor,"Manter posição",jogador,mapa)
                     ),
                     (
                         f"Berserker",
-                        lambda j: self.Combater(exercito_jogador,ex_in,"Berserker",jogador,mapa)
+                        lambda j: self.Combater(jogador.exercito,exercito_invasor,"Berserker",jogador,mapa)
                     )
                 ]
             }
@@ -274,26 +274,26 @@ class Evento:
 
         exercito_invasor.CriarExercito_Invasao(raca,jogador)
               
-        ex_in = exercito_invasor.selecionar_soldados_ativos()
+        exercito_invasor.selecionar_soldados_ativos()
               
-        exercito_jogador = jogador.exercito.selecionar_soldados_ativos()
+        jogador.exercito.selecionar_soldados_ativos()
         
-        quantidade_ativos = self.contar_ativos(exercito_jogador)
+        quantidade_ativos = self.contar_ativos(jogador.exercito.exercito)
 
         array = {
                   "descricao": lambda: f"Os {Fore.RED}{len(exercito_invasor.exercito)} {raca.nome}s {Style.RESET_ALL} se preparam para lutar.\nCom o ataque, dos {Fore.GREEN}{len(jogador.exercito.exercito)}{Style.RESET_ALL}, conseguimos reunir {Fore.GREEN}{quantidade_ativos}{Style.RESET_ALL}.\nO que devemos fazer?",
                   "opcoes": [
                       (
                           f"Avançar",
-                          lambda j: self.Combater(exercito_jogador,ex_in,"Avançar",jogador,mapa)
+                          lambda j: self.Combater(jogador.exercito,exercito_invasor,"Avançar",jogador,mapa)
                       ),
                       (
                           f"Manter posição",
-                          lambda j: self.Combater(exercito_jogador,ex_in,"Manter posição",jogador,mapa)
+                          lambda j: self.Combater(jogador.exercito,exercito_invasor,"Manter posição",jogador,mapa)
                       ),
                       (
                           f"Berserker",
-                          lambda j: self.Combater(exercito_jogador,ex_in,"Berserker",jogador,mapa)
+                          lambda j: self.Combater(jogador.exercito,exercito_invasor,"Berserker",jogador,mapa)
                       )
                   ]
               }

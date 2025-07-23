@@ -98,6 +98,16 @@ class Reino:
             material = random.choices(materiais, weights=pesos, k=1)[0]
             self.construcoes.append(construcao(0,0,material()))
 
+    def getProfissoes(self):
+
+        profissoes_unicas = []
+        for cidadao in self.cidadaos:
+            profissao = cidadao.profissos[0]  # único objeto
+            if not any(p.nome == profissao.nome for p in profissoes_unicas):
+                profissoes_unicas.append(profissao)
+
+        return profissoes_unicas
+
     def criar_faccao_rei(self):
         faccao = Faccoes()
         faccao.criar_Faccao(self.raca,"Por direito",self)
@@ -172,15 +182,18 @@ class Reino:
         feridos= 0
         doentes = 0
         felicidade_geral = 0
+        quantidade_cidadao = 0
 
         for cidadao in self.cidadaos:
-            if cidadao.Ferido == True:
-                feridos += 1
-            if cidadao.Doente == True:
-                doentes += 1
-            felicidade_geral += cidadao.felicidade
+            if cidadao.livre:
+                if cidadao.Ferido == True:
+                    feridos += 1
+                if cidadao.Doente == True:
+                    doentes += 1
+                felicidade_geral += cidadao.felicidade
+                quantidade_cidadao += 1
         
-        quantidade_cidadao = len(self.cidadaos)
+        #len(self.cidadaos)
 
         if quantidade_cidadao == 0:
             print("Nenhum cidadão na cidade.")
@@ -306,6 +319,9 @@ class Exercito:
     def __init__(self):
         self.nome = random.choice(prefixos) + " " + random.choice(sufixos)
         self.exercito = []
+        self.bencao = 0
+        self.moralMax = 100
+        self.moral = 100
         self.preparo = 1
 
     def CriarSoldado(self,raca):
@@ -324,11 +340,12 @@ class Exercito:
             exercito.append({"Soldado":Soldado,"Ativo": False})
         self.exercito = exercito
     
-    def CriarExercito_Invasao(self,raca,reino):
+    def CriarExercito_Invasao(self,raca,deuses,reino):
         Quantidade_pessoas = random.randint(2, len(reino.cidadaos))
         
         for i in range(Quantidade_pessoas):
             Soldado = self.CriarSoldado(raca)
+            Soldado.deus_adorado = random.choice(deuses)
             self.exercito.append({"Soldado":Soldado,"Ativo": False})
     
     def selecionar_soldados_ativos(self):
@@ -354,8 +371,6 @@ class Exercito:
                 if soldado not in selecionados:
                     soldado["Ativo"] = False
                     selecionados.append(soldado)
-
-        return selecionados
     
     def Treinar_exercito(self):
         chance = random.random()
@@ -368,12 +383,6 @@ class Exercito:
 class Combate:
     def __init__(self):
         self.timer = 0.5
-
-        self.moral_inimigo = 100
-        self.Energia_inimigo = 100
-
-        self.moral_jogador = 100
-        self.Energia_jogador = 100
     
     def getch(self):
         return msvcrt.getch().decode('utf-8')
@@ -410,12 +419,10 @@ class Combate:
             print(f"\n{Fore.YELLOW + Style.BRIGHT}======|      A BATALHA COMEÇOU!      |======{Style.RESET_ALL}\n")
 
             if resultado == 1:
-                self.moral_inimigo -= 10
-                self.Energia_inimigo -= 5
+                inimigo.moral -= 10
                 print(f"{Fore.GREEN}>> Jogador levou vantagem tática!")
             elif resultado == -1:
-                self.moral_jogador -= 10
-                self.Energia_jogador -= 5
+                reino.moral -= 10
                 print(f"{Fore.RED}>> Inimigo levou vantagem tática!")
             else:
                 print(f"{Fore.CYAN}>> Táticas se equilibraram.")
@@ -425,9 +432,9 @@ class Combate:
             
             print(f"{Fore.RED}---> Dano Inimigo: {int(media_inimigo)}\n{Fore.GREEN}---> Dano Jogador: {int(media_jogador)} {Style.RESET_ALL} {Fore.YELLOW}")
             print("\n")
-            print(f"{Fore.YELLOW}===>>> {Fore.RED}Inimigo: {int(self.moral_inimigo)} {Fore.YELLOW}x {Fore.GREEN}{int(self.moral_jogador)} Jogador{Style.RESET_ALL} {Fore.YELLOW}<<<===\n")
+            print(f"{Fore.YELLOW}===>>> {Fore.RED}Inimigo: {int(inimigo.moral)} {Fore.YELLOW}x {Fore.GREEN}{int(reino.moral)} Jogador{Style.RESET_ALL} {Fore.YELLOW}<<<===\n")
             
-            resultado = self.Resultado()
+            resultado = self.Resultado(inimigo,reino)
             
             while resultado == None:
 
@@ -440,13 +447,11 @@ class Combate:
                 balanca_inimigo = 1 - balanca_jogador 
                             
                 if balanca_jogador > balanca_inimigo:
-                    self.moral_inimigo -= media_jogador
-                    self.Energia_inimigo -= 5
+                    inimigo.moral -= media_jogador
                     print(f"{Fore.GREEN}-> Seu exército pressiona e força o inimigo a recuar!{Style.RESET_ALL}")
 
                 elif balanca_jogador < balanca_inimigo:
-                    self.moral_jogador -= media_inimigo
-                    self.Energia_jogador -= 5
+                    reino.moral -= media_inimigo
                     print(f"{Fore.RED}-> O inimigo avança! Seu exército está sendo pressionado.{Style.RESET_ALL}")
 
                 else:
@@ -458,9 +463,9 @@ class Combate:
                 if evento_especial_chances_inimigo >= 0.5 and inimigo:
                     self.EventoEspecial(inimigo,reino,media_inimigo,media_jogador,"Inimigo",Fore.LIGHTMAGENTA_EX,Fore.GREEN)
             
-                print(f"{Fore.YELLOW}===>>> {Fore.RED}Inimigo: {int(self.moral_inimigo)} {Fore.YELLOW}x {Fore.GREEN}{int(self.moral_jogador)} Jogador{Style.RESET_ALL} {Fore.YELLOW}<<<===\n")
+                print(f"{Fore.YELLOW}===>>> {Fore.RED}Inimigo: {int(inimigo.moral)} {Fore.YELLOW}x {Fore.GREEN}{int(reino.moral)} Jogador{Style.RESET_ALL} {Fore.YELLOW}<<<===\n")
                 #print("\n")
-                resultado = self.Resultado()
+                resultado = self.Resultado(inimigo,reino)
 
             if not resultado:
                 ouro = random.randint(50,100)
@@ -468,10 +473,19 @@ class Combate:
 
                 print(f"\n{Fore.YELLOW + Style.BRIGHT}======|            VITÓRIA!          |======{Style.RESET_ALL}")
                 print(f"{Fore.YELLOW}Você saqueou {ouro} moedas de ouro\nVocê coletou {comida_Add} unidades de comida.{Style.RESET_ALL}")
-                
                 self.add_comida(comida_Add,jogador)
                 jogador.ouro += ouro
-
+                if jogador.Caracteristicas == "Escrevista":
+                    chance_escravos = random.random()
+                    if chance_escravos > 0.9:
+                        quantidade_escravos = random.randint(1,len(inimigo.exercito))
+                        escravos = random.sample(inimigo.exercito,quantidade_escravos)
+                        for escravo in escravos:
+                            escravo["Soldado"].livre = False
+                            escravo["Soldado"].servico_militar = False
+                            jogador.cidadaos.append(escravo["Soldado"])
+                        
+                        print(f"{Fore.YELLOW}Você escravisou {quantidade_escravos} pessoas\n")
             else:
                 Metodo_derrota()
                 
@@ -481,19 +495,20 @@ class Combate:
         self.desativer_Exercito(reino)
 
     def desativer_Exercito(self,exercito):
-        for soldado in exercito:
+        for soldado in exercito.exercito:
             soldado['Ativo'] = False
+        exercito.moral = exercito.moralMax
     
     def EventoEspecial(self,jogador,inimigo,media_jogador,media_inimigo,tipo,fore,fore_inimigo):
 
         if not jogador or not inimigo:
             return  # evita erro se algum lado estiver sem soldados
     
-        soldado = random.choice(jogador)
-        soldadoInimigo = random.choice(inimigo)
+        soldado = random.choice(jogador.exercito)
+        soldadoInimigo = random.choice(inimigo.exercito)
 
         if soldado['Soldado'].forca >= soldadoInimigo['Soldado'].destreza or soldado['Soldado'].destreza >= soldadoInimigo['Soldado'].forca:
-            self.Dano_especial(tipo,soldado['Soldado'])
+            self.Dano_especial(tipo,soldado['Soldado'],inimigo,jogador)
 
             print(f"{Style.BRIGHT}{fore}|__ {soldado['Soldado'].nome} realiza um ataque especial em {fore_inimigo}{soldadoInimigo['Soldado'].nome}!{Style.RESET_ALL}")
             soldado['Soldado'].Atacar(soldadoInimigo['Soldado'])
@@ -504,19 +519,17 @@ class Combate:
                 print(f"{Fore.RED}|_____ {soldadoInimigo['Soldado'].nome} foi incapacitado!{Style.RESET_ALL}")
                 soldadoInimigo['Ativo'] = False
                 soldadoInimigo['Soldado'].acao_momento = ['Trabalhar']
-                if len(inimigo)>0:
+                if len(inimigo.exercito)>0:
                     media_inimigo = self.definir_vitoria(inimigo)
         else:
             print(f"{Fore.LIGHTBLACK_EX}|__ {Style.BRIGHT}{fore}{soldado['Soldado'].nome}{Style.RESET_ALL}{Fore.LIGHTBLACK_EX} tentou um ataque especial, mas foi impedido.{Style.RESET_ALL}")
     
-    def Dano_especial(self,tipo,soldado):
+    def Dano_especial(self,tipo,soldado,inimigo,reino):
         match tipo:
             case "Jogador":
-                self.moral_inimigo -= soldado.dano
-                self.Energia_jogador -= 5
+                inimigo.moral -= soldado.dano
             case "Inimigo":
-                self.moral_jogador -= soldado.dano
-                self.Energia_inimigo -= 5
+                reino.moral -= soldado.dano
     
     def tirar_comida(self,quantidade,reino):
         for construcao in reino.construcoes:
@@ -540,18 +553,18 @@ class Combate:
         dano = 0
         def definir_n(exercito):
             numero = 0
-            for soldado in exercito:
+            for soldado in exercito.exercito:
                 if soldado["Ativo"]:
                     numero +=1
             return numero
         
         n = definir_n(exercito)
 
-        for p in exercito:
+        for p in exercito.exercito:
             if p['Ativo']:
                 dano += p['Soldado'].dano
 
-        medias = dano/len(exercito)
+        medias = dano/len(exercito.exercito)
         return medias
 
 
@@ -565,10 +578,10 @@ class Combate:
         else:
             return -1  # tatica2 vence
     
-    def Resultado(self):
-        if self.moral_inimigo <=0 :
+    def Resultado(self,inimigo,reino):
+        if inimigo.moral <=0 :
             return False
-        elif self.moral_jogador <= 0:
+        elif reino.moral <= 0:
             return True
         return None
 

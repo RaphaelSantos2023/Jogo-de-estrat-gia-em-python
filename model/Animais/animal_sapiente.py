@@ -64,6 +64,7 @@ class Animal_Sapien (Animal):
 
       self.Ferido = False
       self.Doente = False
+      self.livre = True
 
       self.acao_momento = ["Socializar"]
       self.profissos = self.GerarProfissao()
@@ -375,7 +376,7 @@ class Animal_Sapien (Animal):
     return (
     f"\n👤 {self.nome} — Um(a) {self.Nome_especie.nome}\n"
     f"🎭 Emoção atual: {self.emocoes}\n"
-    f"Necessidade: \n{necessidade}"
+    f"Necessidade: \n{necessidade}\n"
     f"😀 Felicidade: {self.felicidade}\n"
     f"🍽️ Fome: {self.fome}\n"
     f"🧠 Personalidade: {personalidade_str}\n"

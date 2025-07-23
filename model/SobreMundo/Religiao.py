@@ -144,18 +144,18 @@ class DeusGuerra(Deuses):
         super().__init__("Guerra",raca)
         self.Bencao_Descricao = {
             "Ordem": "Concede bênçãos estratégicas e força a guerreiros aliados.",
-            "Neutro": "Inspira coragem e aumenta a moral das tropas.",
+            "Neutro": "Depreda a coragem e aumenta a moral das tropas inimigas.",
             "Caos": "Aumenta o dano físico causado, mas reduz o controle."
         }
     
     def Bencao_Ordem(self, alvo, intensidade):
-        abencaoBatalha(alvo, intensidade)
+        reforcarMoral(alvo, intensidade)
 
     def Bencao_Caos(self, alvo, intensidade):
-        aumentarDano(alvo, intensidade)
+        Penalidade_exercito_inimigo(alvo, intensidade)
 
     def Bencao_Neutro(self, alvo, intensidade):
-        reforcarMoral(alvo, intensidade)
+        abencaoBatalha(alvo, intensidade)
 
 class DeusMorte(Deuses):
     def __init__(self,raca):
@@ -431,9 +431,8 @@ def doencasPragas(alvo=None, intensidade=1):
     alvo.vida -= perda_vida
     print(f"{alvo.nome} foi atingido por uma praga! {perda_vida} de vida foram perdidos.")
 
-def aumentarDano(alvo=None, intensidade=1):
-    for soldado in alvo.exercito:
-        soldado.dano += intensidade * 2
+def Penalidade_exercito_inimigo(alvo=None, intensidade=1):
+    alvo.exercito.moral -= intensidade * 10
     print(f"O dano dos soldados de {alvo.nome} aumentou! {intensidade * 2} de dano foram adicionados a cada soldado.")
 
 def reduzirDano(alvo=None, intensidade=1):
@@ -457,10 +456,16 @@ def diminuirAnimais(alvo=None, intensidade=1):
     print(f"{alvo.nome} perdeu {perda_animais} animais devido a uma maldição.")
 
 def reforcarMoral(alvo=None, intensidade=1):
-    """Aumenta o moral da população, o que melhora a produtividade e a felicidade."""
-    aumento_moral = intensidade * 5
-    alvo.moral += aumento_moral
-    print(f"O moral da população em {alvo.nome} aumentou em {aumento_moral}.")
+    aumento_moral = intensidade * 50
+    alvo.exercito.moral += aumento_moral
+
+    if aumento_moral > 0:
+        print(f"{Fore.YELLOW}>>> Tambores ecoaram por entre as muralhas de {alvo.nome},\n"
+              f"discursos inflamados reacenderam a esperança do povo.\n"
+              f"A moral se elevou em {aumento_moral} pontos, e os corações agora batem mais fortes com bravura renovada!{Style.RESET_ALL}")
+    else:
+        print(f"{Fore.LIGHTBLACK_EX}>>> O silêncio pairou sobre {alvo.nome}, sem aclamações ou gritos de guerra.\n"
+              f"Nenhuma fagulha de ânimo percorreu os rostos cansados da população...{Style.RESET_ALL}")
 
 def desastreNatural(alvo=None, intensidade=1):
     dano_construcoes = intensidade * 2
@@ -528,10 +533,14 @@ def resgatarDaMorte(alvo=None):
         print(f"{alvo.nome} foi revivido e agora está completamente restaurado.")
 
 def abencaoBatalha(alvo=None, intensidade=1):
-    """Aumenta as habilidades dos soldados, como dano ou defesa."""
-    for soldado in alvo.exercito:
-        soldado.dano += intensidade * 3
-    print(f"Os soldados do reino {alvo.nome} receberam uma bênção de batalha, aumentando seu dano.")
+    alvo.exercito.bencao += intensidade
+    if intensidade > 0:
+        print(f"{Fore.LIGHTCYAN_EX}>>> Um brilho celestial envolveu os campos de {alvo.nome},\n"
+              f"e uma aura sagrada incendiou os corações dos soldados.\n"
+              f"O espírito de guerra foi fortalecido com uma bênção de batalha, aumentando seu poder de ataque em {intensidade} ponto(s).")
+    else:
+        print(f"{Fore.LIGHTBLACK_EX}>>> O céu permaneceu quieto sobre {alvo.nome}, e nenhum sinal divino foi sentido.\n"
+              f"Os soldados aguardam, disciplinados, por uma bênção que não veio.{Style.RESET_ALL}")
 
 def aumentar_fertilidade(alvo=None, intensidade=1):
     intensidade = max(0, min(intensidade, 1))
