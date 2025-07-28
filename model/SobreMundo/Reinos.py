@@ -1,4 +1,5 @@
 import random
+from model.Estoque.estoque import Estoque
 from model.Animais.animal_sapiente import Animal_Sapien
 from model.Meteriais.comida import Comida
 from model.SobreMundo.tradicao import Tradicao
@@ -6,12 +7,25 @@ from model.Meteriais.construcao import (
     Quartel,Plantacao,Armazem_Comida,Armazem_materiais,Armazem,
     Templo,Posto_Comercio,Murro,Taverna,Casa,Cabana,Mina
 )
-from model.Meteriais.material import (Madeira,Pedra,Ferro,Cobre,Estanho,Prata,Ouro,Platina,Níquel,Titânio)
+from model.Meteriais.Itens import (
+    espada,
+    armadura,
+    escudo,
+    adorno,
+    Tapecaria,
+    vasos
+)
+import os
+from model.Meteriais.material import (Madeira,Pedra,Argila,Vidro,
+Bronze, Obsidiana, Cristal,Ferro,Cobre,Estanho,Prata,Ouro,Platina,Níquel,Titânio)
 from colorama import Fore, Style, init
 import time
 import msvcrt
 
 vestimenta = ['Toga', 'Túnica', 'Roupão', 'Vestido']
+
+def limpar_tela():
+        os.system('cls' if os.name == 'nt' else 'clear')
 
 class Reino:
     def __init__(self, raca):
@@ -30,6 +44,7 @@ class Reino:
         self.sacerdotes = []
 
         self.faccoes_reino = []
+        self.expedicoes = []
         self.Faccao_Rei = None
 
         self.Caracteristicas = []
@@ -138,8 +153,8 @@ class Reino:
         for construcao in self.construcoes:
             if construcao.nome == "Armazem de comida":
                 for item in construcao.inventario:
-                    if isinstance(item["Nome"], Comida):
-                        total += item["Quantidade"]
+                    if isinstance(item.nome, Comida):
+                        total += item.quantidade
         return total
 
     def calcular_total_animal(self):
@@ -147,7 +162,7 @@ class Reino:
         for construcao in self.construcoes:
             if construcao.nome == "Armazem":
                 for item in construcao.inventario:
-                    total += item["Quantidade"]
+                    total += item.quantidade
         return total
 
     def criarRelacao(self, reino):
@@ -216,6 +231,34 @@ class Reino:
         print(f"• Quantidade de feridos: {Fore.LIGHTRED_EX}{feridos}")
         print(f"• Quantidade de doentes: {Fore.LIGHTMAGENTA_EX}{doentes}")
         print(f"• Felicidade média: {humor}")
+
+    def mostrarExpedicao(self):
+        def retornarPessoas(equipe):
+            texto = "   Integrandes: "
+            for pessoa in equipe:
+                if pessoa["Cargo"] == "Lider":
+                    cor = Fore.LIGHTYELLOW_EX
+                else:
+                    cor = Fore.LIGHTGREEN_EX
+                texto +=f"\n     • {pessoa["Nome"]},{cor} {pessoa["Cargo"]}{Style.RESET_ALL}"
+            return texto
+        
+        if self.expedicoes != []:
+            for i , exploracao in enumerate(self.expedicoes):
+                grupo = exploracao["Grupo"].membros
+                data = exploracao["Ano inicio"]
+                membros = retornarPessoas(grupo)
+                print(f"{Fore.LIGHTCYAN_EX}{i+1}{Style.RESET_ALL}. {len(grupo)} pessoas sairam no dia {data}")
+                print(f"{membros}")
+        else:
+            print("> Não há expedições em andamento")
+
+    def retornarEspadasN(self):
+        for construcao in self.construcoes:
+            if isinstance(construcao,Armazem_materiais):
+                for estoque in construcao.inventario:
+                    if isinstance(estoque.nome,espada):
+                        return estoque.quantidade
 
     def MostrarRelacoes(self):
         txt = "\n\nRelações com outros reinos:\n"
@@ -361,7 +404,7 @@ class Exercito:
         candidatos = random.sample(self.exercito, min(quantidade_ativa, len(self.exercito)))
         
         for soldado in candidatos:
-            if soldado["Soldado"].Ferido == False and soldado["Soldado"].Doente == False:
+            if soldado["Soldado"].Ferido == False and soldado["Soldado"].Doente == False and soldado["Soldado"].explorando == False:
                 soldado["Ativo"] = True
                 selecionados.append(soldado)
         
@@ -449,19 +492,16 @@ class Combate:
                 if balanca_jogador > balanca_inimigo:
                     inimigo.moral -= media_jogador
                     print(f"{Fore.GREEN}-> Seu exército pressiona e força o inimigo a recuar!{Style.RESET_ALL}")
+                    if evento_especial_chances >= 0.5 and reino:
+                        self.EventoEspecial(reino,inimigo,media_jogador,media_inimigo,"Jogador",Fore.LIGHTBLUE_EX,Fore.RED)
 
                 elif balanca_jogador < balanca_inimigo:
                     reino.moral -= media_inimigo
                     print(f"{Fore.RED}-> O inimigo avança! Seu exército está sendo pressionado.{Style.RESET_ALL}")
-
+                    if evento_especial_chances_inimigo >= 0.5 and inimigo:
+                        self.EventoEspecial(inimigo,reino,media_inimigo,media_jogador,"Inimigo",Fore.LIGHTMAGENTA_EX,Fore.GREEN)
                 else:
                     print(f"{Fore.CYAN}-> Forças equilibradas. Nenhum avanço significativo.{Style.RESET_ALL}")
-                
-                if evento_especial_chances >= 0.5 and reino:
-                    self.EventoEspecial(reino,inimigo,media_jogador,media_inimigo,"Jogador",Fore.LIGHTBLUE_EX,Fore.RED)
-                
-                if evento_especial_chances_inimigo >= 0.5 and inimigo:
-                    self.EventoEspecial(inimigo,reino,media_inimigo,media_jogador,"Inimigo",Fore.LIGHTMAGENTA_EX,Fore.GREEN)
             
                 print(f"{Fore.YELLOW}===>>> {Fore.RED}Inimigo: {int(inimigo.moral)} {Fore.YELLOW}x {Fore.GREEN}{int(reino.moral)} Jogador{Style.RESET_ALL} {Fore.YELLOW}<<<===\n")
                 #print("\n")
@@ -527,26 +567,26 @@ class Combate:
     def Dano_especial(self,tipo,soldado,inimigo,reino):
         match tipo:
             case "Jogador":
-                inimigo.moral -= soldado.dano
+                inimigo.moral -= self.definir_vitoria(reino)
             case "Inimigo":
-                reino.moral -= soldado.dano
+                reino.moral -= self.definir_vitoria(inimigo)
     
     def tirar_comida(self,quantidade,reino):
         for construcao in reino.construcoes:
             if construcao.nome == "Armazem de comida":
                 for item in construcao.inventario:
-                    if isinstance(item["Nome"], Comida) and item['Quantidade'] > 0 and quantidade >0 :
-                        quantidade_tirada = random.randint(1,item['Quantidade'])
-                        item["Quantidade"] -= quantidade_tirada
+                    if isinstance(item.nome, Comida) and item.quantidade > 0 and quantidade >0 :
+                        quantidade_tirada = random.randint(1,item.quantidade)
+                        item.quantidade -= quantidade_tirada
                         quantidade -= quantidade_tirada
     
     def add_comida(self,quantidade,reino):
         for construcao in reino.construcoes:
             if construcao.nome == "Armazem de comida":
                 for item in construcao.inventario:
-                    if isinstance(item["Nome"], Comida) and quantidade >0 :
-                        quantidade_tirada = random.randint(0,item['Quantidade'])
-                        item["Quantidade"] += quantidade_tirada
+                    if isinstance(item.nome, Comida) and quantidade >0 :
+                        quantidade_tirada = random.randint(0,item.quantidade)
+                        item.quantidade += quantidade_tirada
                         quantidade -= quantidade_tirada 
     
     def definir_vitoria(self, exercito):
@@ -608,7 +648,6 @@ faccoes_formatadas = [
     {"nome": "Pacto", "sobrenome": "da Lua Quebrada"}
 ]
 
-
 class Faccoes:
     def __init__(self):
         self.nome = random.choice(faccoes_formatadas)["nome"] + " " + random.choice(faccoes_formatadas)["sobrenome"]
@@ -629,3 +668,279 @@ class Faccoes:
 
         self.criar_lider()
         self.exercito.CriarExercito(self.raca,reino)
+
+class Equipe_exploracao:
+    def __init__(self,reino):
+        self.reino = reino
+        self.membros =[]
+        self.quantidade_membros = 0
+        self.regiao = None
+        self.Explorando = True
+        self.Voltando = False
+
+class Tribo:
+    def __init__(self,raca):
+        self.membros = []
+        self.raca = raca
+        self.agressividade = random.choice([True,False])
+        self.descricao = ""
+
+        self.gerarIntegrantes(raca)
+        self.definirDescricao()
+    
+    def gerarIntegrantes(self,raca):
+        quantidade = random.randint(4,10)
+        
+        for i in range(quantidade):
+            vida = random.randint(1,10)
+            dano = random.randint(1,5)
+            idade = random.randint(18, 30)
+
+            membro = Animal_Sapien(raca.simbolo,vida,dano,idade,raca,0,0)
+            self.membros.append(membro)
+    
+    def definirDescricao(self):
+        if self.agressividade:
+            self.descricao = (
+                f"Essa tribo {self.raca.nome} vestem peles de inimigos mortos e adornam os corpos com ossos humanos. "
+                f"O fedor de sangue seco e carne apodrecida anuncia sua presença antes mesmo que sejam vistos. "
+                f"Olhos selvagens e lanças manchadas de sangue revelam que não conhecem piedade."
+            )
+        else:
+            self.descricao = (
+                f"Essa tribo {self.raca.nome} vive de forma pascifica. "
+                f"Suas vestes são feitas de fibras vegetais e peles de caça ritual. "
+                f"Embora cautelosos com estranhos, seus olhos não carregam ódio, mas sim desconfiança. "
+                f"São mestres em ervas, armadilhas e sabedoria ancestral transmitida por gerações."
+            )
+
+class Exploracao:
+    def __init__(self,mundo):
+        self.mundo = mundo
+    
+    def Combater(self,grupo):
+        dano = 0
+
+        for p in grupo.membros:
+            dano += p.dano
+
+        medias = dano/len(grupo.membros)
+        return medias
+    
+    def Aventura(self,grupo):
+
+        def sortear_comida():
+            quantidade = random.randint(1, len(grupo.regiao.vegetacao) - 1)
+            comidas = random.sample(grupo.regiao.vegetacao, quantidade)
+            return comidas, quantidade
+
+        def sortear_recursos():
+            recursos = [espada, armadura, escudo, adorno, Tapecaria, vasos]
+            quantidade = random.randint(1, len(recursos) - 1)
+            recursos_sorteados = random.sample(recursos, quantidade)
+            return recursos_sorteados, quantidade
+
+        def distribuir_comida(comidas, quantidade_comida):
+            quantidade_por_item = max(1, quantidade_comida // len(comidas))
+            for comida_classe in comidas:
+                for construcao in grupo.reino.construcoes:
+                    if isinstance(construcao, Armazem_Comida):
+                        for item in construcao.inventario:
+                            if isinstance(item.nome, comida_classe):
+                                item.quantidade += quantidade_por_item
+                                break
+                        else:
+                            construcao.inventario.append(Estoque(comida_classe(),quantidade_por_item))
+
+        def distribuir_recursos(recursos, quantidade_total):
+            materiais_classes = [Madeira, Pedra, Cobre, Argila, Vidro, Bronze, Obsidiana, Cristal]
+            quantidade_por_item = max(1, quantidade_total // len(recursos))
+            for recurso_classe in recursos:
+                material = random.choice(materiais_classes)()
+                print(material)
+                recurso_instancia = recurso_classe(material)
+                for construcao in grupo.reino.construcoes:
+                    if isinstance(construcao, Armazem_materiais):
+                        for item in construcao.inventario:
+                            if isinstance(item.nome, recurso_classe):
+                                item.quantidade += quantidade_por_item
+                                break
+                        else:
+                            construcao.inventario.append(Estoque(recurso_instancia,quantidade_por_item))
+
+        def premio():
+            grupo.reino.ouro += (quantidade_ouro := random.randint(1, 20))
+
+            comidas, qtd_comidas = sortear_comida()
+            recursos, qtd_recursos = sortear_recursos()
+
+            distribuir_comida(comidas, qtd_comidas)
+            distribuir_recursos(recursos, qtd_recursos)
+
+            print(f"\n{Fore.YELLOW + Style.BRIGHT}======|            VITÓRIA!          |======{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Você saqueou {quantidade_ouro} moedas de ouro.{Style.RESET_ALL}\n")
+
+            print(f"{Fore.GREEN + Style.BRIGHT}>> Comida Coletada:{Style.RESET_ALL}")
+            for comida in comidas:
+                print(f"{Fore.GREEN}- {comida.__name__}: {qtd_comidas // len(comidas)} unidades{Style.RESET_ALL}")
+
+            print(f"\n{Fore.CYAN + Style.BRIGHT}>> Itens Criados:{Style.RESET_ALL}")
+            for recurso in recursos:
+                print(f"{Fore.CYAN}- {recurso.__name__}: {qtd_recursos // len(recursos)} unidade(s){Style.RESET_ALL}")
+                
+        def Tribo_local():
+            raca = random.choice(self.mundo.racas)
+            grupo_tribo = Tribo(raca)
+            
+            opcao = 0
+            Decidido = False
+
+            while opcao != 4 and Decidido is False:
+                print(f"O grupo achou uma tribo de {len(grupo_tribo.membros)} {grupo_tribo.raca.nome}")
+                print("O que eles deveriam fazer?")
+                print(f"{Fore.LIGHTCYAN_EX}1{Style.RESET_ALL}. Ataca-los")
+                print(f"{Fore.LIGHTCYAN_EX}2{Style.RESET_ALL}. Tentar se comunicar")
+                print(f"{Fore.LIGHTCYAN_EX}3{Style.RESET_ALL}. Observar-los de longe")
+                print(f"{Fore.LIGHTCYAN_EX}4{Style.RESET_ALL}. Deixa-los em paz")
+                opcao = int(input("R: "))
+
+                match opcao:
+                    case 1:
+                        poder_tribo = self.Combater(grupo_tribo)
+                        poder_grupo = self.Combater(grupo)
+
+                        if poder_grupo > poder_tribo:
+                            print(f"{Fore.LIGHTGREEN_EX}> Seu grupo consegue esmagar a tribo. Mulheres, crianças e idosos, todos foram extintos")
+                            premio()
+                        else:
+                            print(f"{Fore.LIGHTMAGENTA_EX}> Apesar de você ter iniciado o ataque, foi a tribo que conseguiu a vitoria e afugentou seu grupo")
+                        Decidido = True
+                    case 2:
+                        if grupo_tribo.agressividade:
+                            print(f"{Fore.LIGHTMAGENTA_EX}> Seu grupo se aproxima, mas no momento em que a tribo os vê, eles partem para cima e afugentam seu grupo")
+                        else:
+                            print(f"{Fore.LIGHTGREEN_EX}> Apesar do estranhamento inicial, seu grupo conseguiu estabelecer algum contato com a tribo.\n Como presente de boa fé, receberam alguns recursos")
+                            premio()
+                        Decidido = True
+                    case 3:
+                        chance = random.random()
+
+                        if chance >= 0.85:
+                            print(f"> Seu grupo os observa de loge e concluiu que {grupo_tribo.descricao}")
+                        else:
+                            print(f"> Mesmo observando-os por um tempo, não foi possível indentificar suas intenções")
+        
+        def coletar_comida():
+            comidas, qtd_comidas = sortear_comida()
+            distribuir_comida(comidas, qtd_comidas)
+
+            quantidade_individual = qtd_comidas//len(comidas)
+
+            print(f"\n{Fore.GREEN + Style.BRIGHT}>> Coleta de Comida Finalizada!{Style.RESET_ALL}")
+            for i in range(len(comidas)):
+                print(f"{Fore.GREEN}- {comidas[i].__name__}: {quantidade_individual} unidades{Style.RESET_ALL}")
+
+        def coletar_recursos_vila_abandonada():
+            print(f"\n{Fore.MAGENTA + Style.BRIGHT}Você encontrou uma vila abandonada...{Style.RESET_ALL}")
+            
+            recursos, qtd_recursos = sortear_recursos()
+            distribuir_recursos(recursos, qtd_recursos)
+            # Armazenar no reino
+            grupo.reino.ouro += (quantidade_ouro := random.randint(1, 20))
+            quantidade_individual = qtd_recursos//len(recursos)
+
+            # Mostrar no terminal
+            print(f"{Fore.YELLOW}> Você encontrou {quantidade_ouro} moedas de ouro escondidas.{Style.RESET_ALL}")
+            for i in range(len(recursos)):
+                print(f"{Fore.GREEN}- {recursos[i].__name__}: {quantidade_individual} unidades{Style.RESET_ALL}")
+        
+        evento = random.choice([Tribo_local,coletar_comida,coletar_recursos_vila_abandonada])
+        evento() 
+
+class localizacao_Especial:
+    def __init__(self,tipo,mundo):
+        self.nome = ""
+        self.mundo = mundo
+        self.dias_caminhada = random.randint(1,20)
+        self.tipo = tipo
+        self.descricao = ''
+    
+    def Aventura(self,grupo):
+        print(f"O grupo achou o {self.nome} do tipo {self.tipo}")
+    
+class Reino_perdido(localizacao_Especial):
+    def __init__(self,raca,mundo):
+        super().__init__("Reino perdido",mundo)
+        self.Ativo = True
+        self.reino = None
+        self.nome = ""
+        self.Criar_reino(raca)
+
+    def Criar_reino(self,raca):
+        self.reino = Reino(raca)
+        self.reino.gerar_valores_aleatorios()
+        self.nome = self.reino.nome
+
+class Ruinas_antigas(localizacao_Especial):
+    def __init__(self,raca,mundo):
+        super().__init__("Ruinas antigas",mundo)
+        self.hostilidade = random.choice([True,False])
+        self.raca = None
+        self.habitantes = []
+        self.nivel_populacao = random.choice(["Alto","Medio","Pequeno"])
+        self.quantidade_tesouro = random.choice(["Alto","Medio","Pequeno"])
+        self.itens = []
+        self.gerar_Ruinas(raca)
+    
+    def gerar_Habitantes(self,raca,quantidade):
+        self.raca = raca
+        for i in range(quantidade):
+            vida = random.randint(1,10)
+            dano = random.randint(1,5)
+            idade = random.randint(18, 30)
+            habitante = Animal_Sapien(raca.simbolo,vida,dano,idade,raca,0,0)
+            self.habitantes.append(habitante)
+    
+    def gerar_itens(self,quantidade_tesouroMin,quantidade_tesouroMax):
+        classes_itens = [
+            espada,
+            armadura,
+            escudo,
+            adorno,
+            Tapecaria,
+            vasos
+        ]
+        quantidade_itens = random.randint(1,len(classes_itens))
+        itens = random.sample(classes_itens,quantidade_itens)
+
+        for item in itens:
+            quantidade = random.randint(quantidade_tesouroMin,quantidade_tesouroMax)
+            for i in range(quantidade):
+                self.itens.append(item)
+    
+    def gerar_Ruinas(self,raca):
+        match self.nivel_populacao:
+            case "Alto":
+                self.gerar_Habitantes(raca,20)
+            case "Medio":
+                self.gerar_Habitantes(raca,10)
+            case "Pequeno":
+                self.gerar_Habitantes(raca,5)
+        
+        match self.quantidade_tesouro:
+            case "Alto":
+                self.gerar_itens(12,20)
+            case "Medio":
+                self.gerar_itens(6,11)
+            case "Pequeno":
+                self.gerar_itens(3,5)
+    
+    def Aventura(self,grupo):
+        print(f"O grupo se depara com cuinas de uma antiga cidade, perdida no esquecimento")
+        print("1. Entrar")
+        print("2. Deixar quieto")
+        opcao = int(input("R: "))
+
+        self.mundo.estruturas.append(self)
+
+#class circulo_aprizionamento(localizacao_Especial):

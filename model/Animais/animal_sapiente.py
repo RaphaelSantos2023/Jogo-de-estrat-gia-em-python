@@ -74,6 +74,7 @@ class Animal_Sapien (Animal):
       self.parceiro = None
 
       self.Dentro_estrutura = False
+      self.explorando = False
       self.servico_militar = False
       self.servico_religioso = False
       self.servico_deus = None
@@ -256,7 +257,7 @@ class Animal_Sapien (Animal):
 
       simbolo = random.choice([self.simbolo,self.parceiro.simbolo])
       
-      cria = Animal_Sapien(simbolo,self.vidaMax,100,1,100,1,especieCrianca,self.x,self.y)
+      cria = Animal_Sapien(simbolo,self.vidaMax,100,1,especieCrianca,self.x,self.y)
 
       cria.GerarNome()
       cria.GerarPersonalidade()
@@ -347,7 +348,7 @@ class Animal_Sapien (Animal):
   def getInventario(self):
       text = '\nInventario: \n'
       for item in self.inventario:
-          text += f"{item.nome} - {item.quantidade}\n"
+          text += f"• {item.nome}\n"
       return text
     
   def mostrar_Necessidade(self):

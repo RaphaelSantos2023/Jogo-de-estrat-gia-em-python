@@ -1,8 +1,11 @@
-from colorama import Fore, Style, init
+from model.Estoque.estoque import Estoque
+
 from model.Meteriais.material import (
     Terra,Pedra,Cobre,Estanho,Ferro,Níquel,Prata,Ouro,Platina,Titânio
 )
 from model.Meteriais.comida import Comida
+
+from colorama import Fore, Style, init
 import random
 
 class Construcao:
@@ -91,12 +94,12 @@ class Construcao:
   def addInventario(self,item):
       Tem = False
       for i in range(len(self.inventario)):
-          if item.nome == self.inventario[i]["Nome"].nome:
-              self.inventario[i]["Quantidade"] += 1
+          if item.nome == self.inventario[i].nome.nome:
+              self.inventario[i].quantidade += 1
               Tem = True
 
       if Tem == False:
-          self.inventario.append({"Nome": item, "Quantidade": 1})
+          self.inventario.append(Estoque(item,1))
     
   def encontrar_mais_proximo(self):
     #menor_dist = float("inf")
@@ -121,7 +124,7 @@ class Construcao:
     elif self.tipo == "Armazem":
         text += "Inventario:"
         for i in range(len(self.inventario)):
-            text += f"\n-> {self.inventario[i]['Nome'].nome} - {self.inventario[i]['Quantidade']}"
+            text += f"\n-> {self.inventario[i].nome.nome} - {self.inventario[i].quantidade}"
     
     return text
     
@@ -230,15 +233,12 @@ class Taverna(Demanda_tempo):
         for item_humano in humano.inventario:
             encontrado = False
             for item_taverna in self.inventario:
-                if item_taverna["Nome"] == item_humano["Nome"]:
-                    item_taverna["Quantidade"] += item_humano["Quantidade"]
+                if item_taverna.nome == item_humano["Nome"]:
+                    item_taverna.quantidade += item_humano["Quantidade"]
                     encontrado = True
                     break
             if not encontrado:
-                self.inventario.append({
-                    "Nome": item_humano["Nome"],
-                    "Quantidade": item_humano["Quantidade"]
-                })
+                self.inventario.append(Estoque(item_humano["Nome"],item_humano["Quantidade"]))
 
         humano.inventario = []
         humano.acao_momento.pop(0)
@@ -288,8 +288,8 @@ class Armazem(Construcao):
         text = "Animais:"
         print(f"tamanho array: {len(self.inventario)}")
         for i in range(len(self.inventario)):
-            quantidade_carne = self.inventario[i]['Nome'].comida_quantidade * self.inventario[i]['Quantidade']
-            text += f"\n-> {self.inventario[i]['Nome'].nome} - {self.inventario[i]['Quantidade']} - Quantidade de carne: {quantidade_carne}"
+            quantidade_carne = self.inventario[i].nome.comida_quantidade * self.inventario[i].quantidade
+            text += f"\n-> {self.inventario[i].nome.nome} - {self.inventario[i].quantidade} - Quantidade de carne: {quantidade_carne}"
         
         return text
     
@@ -328,11 +328,11 @@ class Armazem_Comida(Construcao):
     
     def AoChegar_Comer(self, humano):
         if humano.fome < 80:
-            comidas_disponiveis = [item for item in self.inventario if isinstance(item['Nome'], Comida) and item['Quantidade'] > 0]
+            comidas_disponiveis = [item for item in self.inventario if isinstance(item.nome, Comida) and item.quantidade > 0]
             if comidas_disponiveis:
                 comida = random.choice(comidas_disponiveis)
-                humano.Comer(comida['Nome'])
-                comida['Quantidade'] -= 1
+                humano.Comer(comida.nome)
+                comida.quantidade -= 1
                 if humano.felicidade + 50 >= 100:
                     humano.felicidade = 100
                 else:
@@ -401,12 +401,12 @@ class Construir:
             for constru in reino.construcoes:
                 if constru.nome == "Armazem de materiais":
                     for i in range(len(constru.inventario)):
-                        if constru.inventario[i]["Nome"].nome == material["Nome"].nome and continuar:
-                            if constru.inventario[i]["Quantidade"] >= self.quantidade_materiais:
-                                constru.inventario[i]["Quantidade"] -= self.quantidade_materiais
+                        if constru.inventario[i].nome.nome == material.nome.nome and continuar:
+                            if constru.inventario[i].quantidade >= self.quantidade_materiais:
+                                constru.inventario[i].quantidade -= self.quantidade_materiais
                                 continuar = False
                             else:
-                                constru.inventario[i]["Quantidade"] = 0
+                                constru.inventario[i].quantidade = 0
                             
             
             self.construir(x,y,mapa,reino,material)
@@ -415,12 +415,12 @@ class Construir:
             print("Você não tem recursos suficientes para construir isso.")
         
     def construir(self,x,y,mapa,reino,Material):
-        construcao = self.construcao(x,y,Material["Nome"])
+        construcao = self.construcao(x,y,Material.nome)
         mapa[x][y] = construcao.simbolo
         reino.construcoes.append(construcao)
     
     def verificarCondicoes(self,ouro,materiais):
-        if ouro >= self.preco_ouro and materiais["Quantidade"] >= self.quantidade_materiais:
+        if ouro >= self.preco_ouro and materiais.quantidade >= self.quantidade_materiais:
             return True
         return False
 

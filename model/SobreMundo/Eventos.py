@@ -1,4 +1,5 @@
 import random
+from model.Estoque.estoque import Estoque
 from model.SobreMundo.Reinos import Exercito
 from model.Animais.animal_sapiente import Animal_Sapien
 from model.Animais.animal import Animal_domestico
@@ -217,7 +218,7 @@ class Evento:
             item['Quantidade'] += quantidade
             return
 
-    construcao.inventario.append({"Nome": animal_adicao, "Quantidade": quantidade})
+    construcao.inventario.append(Estoque(animal_adicao,quantidade))
 
   # Métodos auxiliares
   def pegar_animais(self, jogador, animal, quantidade, dono):

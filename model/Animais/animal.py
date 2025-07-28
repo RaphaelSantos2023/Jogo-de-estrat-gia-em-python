@@ -70,6 +70,15 @@ class Animal:
                 f"\n|| Gênero: {self.genero} || Sexualidade: {type(self.sexualidade).__name__} || "
                 f"\n|| Dano: {self.dano} \n||  Força: {self.forca} || Destreza: {self.destreza} || Inteligência: {self.inteligencia}"
                 f"\n|| Carisma: {self.carisma} || Constituição: {self.constituicao}")
+    
+    def ShowStatus(self):
+        print(
+        f"\n• Força: {self.forca}",
+        f"\n• Destreza: {self.destreza}",
+        f"\n• Inteligencia: {self.inteligencia}",
+        f"\n• Carisma: {self.carisma}",
+        f"\n• Constituição: {self.constituicao}"
+        )
 
 class Animal_nao_sapiente(Animal):
     def __init__(self, simbolo, vida, dano, nome,comida_quantidade,Tempo_reproducao ,tipo):

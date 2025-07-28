@@ -3,7 +3,7 @@ from colorama import Fore, Style, init
 
 class Comida(Material):
   def __init__(self,nome,simbolo,fome):
-      super().__init__(nome,"comestivel",simbolo,10)
+      super().__init__(nome,"comestivel",simbolo,10,10)
       self.fome = fome
       self.comestivel = True
 
@@ -135,7 +135,7 @@ class Azeitona(Comida):
 # ---- >Sementes
 class Semente(Material):
     def __init__(self,nome):
-        super().__init__(nome,"Semente","!",10)
+        super().__init__(nome,"Semente","!",10,5)
 
 class semente_maca(Semente):
     def __init__(self):

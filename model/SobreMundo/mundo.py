@@ -11,6 +11,7 @@ class Mundo:
     self.regioes = regioes
     self.religiao = religiao
     self.culturas = culturas
+    self.estruturas = []
 
   def descricao(self):
     print("\n\n------ Reinos ------------------------------\n\n")
@@ -27,30 +28,46 @@ class Mundo:
       print(self.regioes[i].Descricao())
 
 class Regioes:
-  def __init__(self,nome,tipo,animais,reinos,temperatura,vegetacao,riqueza_mineral):
-    self.nome = nome
-    self.tipo = tipo
-    self.animais = animais
-    self.vegetacao = vegetacao
-    self.riqueza_mineral = riqueza_mineral
-    self.reinos = reinos
-    self.temperatura = temperatura
+    def __init__(self, nome, tipo, animais, reinos, temperatura, vegetacao, riqueza_mineral):
+        self.nome = nome
+        self.tipo = tipo  # Esperado: dicionário com a chave 'nome'
+        self.animais = animais  # Lista de classes (a serem instanciadas em monstrarAnimais)
+        self.vegetacao = vegetacao
+        self.riqueza_mineral = riqueza_mineral
+        self.Estruturas = []  # Lista vazia de estruturas (podem ser adicionadas depois)
+        self.reinos = reinos  # Lista de objetos com atributo 'nome'
+        self.temperatura = temperatura
 
-  def monstrarAnimais(self):
-    text = ""
-    for animal in self.animais:
-      animal = animal()
-      text += f"\n- {animal.nome}"
-    return text
+    def mostrar_animais(self):
+        texto = ""
+        for AnimalClasse in self.animais:
+            animal = AnimalClasse()
+            texto += f"\n    • {Fore.LIGHTYELLOW_EX}{animal.nome}"
+        return texto + f"{Style.RESET_ALL}" or "\n  Nenhum animal encontrado."
     
-  def Descricao(self):
-    text = self.monstrarAnimais()
-    txt = f"Região: {self.nome},\n Tipo: {self.tipo['nome']},\n Animais: {text}\n Vegetação: {self.vegetacao} \nTemperatura: {self.temperatura},\n Reinos"
-    for i in range(len(self.reinos)):
-      txt += "\n - "+self.reinos[i].nome
-    txt += "\n\n"
-    
-    return txt
+    def mostrarVegetacao(self):
+      text = ""
+      for vegetacao in self.vegetacao:
+        vegetacao = vegetacao()
+        text += f"\n    • {Fore.GREEN}{vegetacao.nome}"
+      return text + f"{Style.RESET_ALL}"
+
+    def Descricao(self):
+        descricao = (
+            f"🌍 Região: {self.nome}\n"
+            f"🔸 Tipo: {self.tipo['nome']}\n"
+            f"🌡️ Temperatura média: {self.temperatura}\n"
+            f"🌿 Vegetação: {self.mostrarVegetacao()}\n"
+            f"💎 Riqueza Mineral: {self.riqueza_mineral}\n"
+            f"🦔 Animais:{self.mostrar_animais()}\n"
+            f"🏰 Reinos presentes:"
+        )
+        if self.reinos:
+            for reino in self.reinos:
+                descricao += f"\n  • {reino.nome}"
+        else:
+            descricao += "\n  Nenhum reino registrado."
+        return descricao + "\n"
 
 class Relogio:
   def __init__(self):
@@ -62,7 +79,7 @@ class Relogio:
 
   def passar_tempo(self,cidadaos):
       """Avança um segundo no tempo e atualiza as horas, minutos, dias."""
-      self.minuto += random.randint(1,5) #random.randint(5,10)
+      self.minuto += random.randint(5,10)
 
       # Se passaram 60 minutos, aumentamos as horas
       if self.minuto >= 60:

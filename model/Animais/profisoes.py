@@ -3,6 +3,8 @@ from model.Meteriais.Cenario import Pedregulho
 from model.Meteriais.comida import Pescado,cultivo_trigo
 from model.Meteriais.material import Terra
 from model.Meteriais.construcao import Plantacao, Armazem_Comida
+from model.Estoque.estoque import Estoque
+
 from colorama import Fore, Style, init
 import random
 
@@ -163,19 +165,19 @@ class Taverneiro(Profissao):
         for construcao in self.reino.construcoes:
             if construcao.x == ax and construcao.y == ay:
                 for item in construcao.inventario:
-                    if item["Quantidade"] > 1:
-                        metade = item["Quantidade"] // 2
-                        item["Quantidade"] -= metade
+                    if item.quantidade > 1:
+                        metade = item.quantidade // 2
+                        item.quantidade -= metade
 
                         # Verifica se o humano já tem esse item no inventário
                         encontrou = False
                         for inv_item in humano.inventario:
-                            if inv_item["Nome"] == item["Nome"]:
+                            if inv_item["Nome"] == item.nome:
                                 inv_item["Quantidade"] += metade
                                 encontrou = True
                                 break
                         if not encontrou:
                             humano.inventario.append({
-                                "Nome": item["Nome"],
+                                "Nome": item.nome,
                                 "Quantidade": metade
                             })

@@ -17,6 +17,7 @@ from model.SobreMundo.Racas import Raca, Criatura
 from control import Control
 from model.Animais.animal_sapiente import personalidade
 from model.SobreMundo.mundo import Relogio
+from model.SobreMundo.Reinos import Equipe_exploracao
 import select
 from model.Animais.profisoes import Minerador, Lenhador, Pescador, Fazendeiro
 #from construcoes import *
@@ -90,7 +91,7 @@ class main:
             for j in range(i + 1, len(self.reino_Jogador.cidadaos)):
                 h1 = self.reino_Jogador.cidadaos[i]
                 h2 = self.reino_Jogador.cidadaos[j]
-                if self.control.VerificarProximidade(h1, h2) and h2.acao_momento[0] == "Socializar" and h1.acao_momento[0] == "Socializar":
+                if self.control.VerificarProximidade(h1, h2) and h2.acao_momento[0] == "Socializar" and h1.explorando is False and h2.explorando is False and h1.acao_momento[0] == "Socializar":
                     H1 = h1
                     h1.Socializar(h2,self.reino_Jogador)
                     h2.Socializar(H1,self.reino_Jogador)
@@ -209,17 +210,24 @@ class main:
     # ---> Lista de cidadãos
 
     def printCidadao(self):
+        cidadaos = []
         for i, h in enumerate(self.reino_Jogador.cidadaos):
+            if not h.explorando:
+                cidadaos.append(h)
+
+        for i, h in enumerate(cidadaos):
             print(f"{Fore.CYAN}{i}{Style.RESET_ALL}. {h.nome}")
-        print(f"{Fore.RED}{len(self.reino_Jogador.cidadaos)}{Style.RESET_ALL}. Voltar")
+        print(f"{Fore.RED}{len(cidadaos)}{Style.RESET_ALL}. Voltar")
         print(f"{Fore.GREEN}{'-'*40}{Style.RESET_ALL}")
+
+        return cidadaos
 
     def verDadoCidadao(self):
         self.SubMenuTitulo("🔍 Escolha um cidadão para ver os dados")
-        self.printCidadao()
+        cidadaos = self.printCidadao()
         #try:
         opcao = int(input('R: '))
-        if opcao == len(self.reino_Jogador.cidadaos):
+        if opcao == len(cidadaos):
             return
         self.limpar_tela()
         self.DescricaoCidadao(opcao)
@@ -235,15 +243,15 @@ class main:
 
     def ListarCidadaos(self):
         self.SubMenuTitulo(f"👥 Lista de Cidadãos: {len(self.reino_Jogador.cidadaos)}")
-        self.printCidadao()
+        cidadaos = self.printCidadao()
         #try:
         opcao = int(input(f"{Fore.YELLOW}Escolha um cidadão para ver relações: {Style.RESET_ALL}"))
-        if opcao == len(self.reino_Jogador.cidadaos):
+        if opcao == len(cidadaos):
             print("Voltando...")
             self.getch()
         else:
             self.limpar_tela()
-            self.mostrarRelacoes(opcao)
+            self.mostrarRelacoes(opcao,cidadaos)
             self.getch()
         #except:
             #print("Entrada inválida.")
@@ -257,11 +265,11 @@ class main:
         self.getch()
         
 
-    def mostrarRelacoes(self,id):
-        print(f"{Fore.BLUE}🤝 Relações de {self.reino_Jogador.cidadaos[id].nome}:{Style.RESET_ALL}")
+    def mostrarRelacoes(self,id,cidadaos):
+        print(f"{Fore.BLUE}🤝 Relações de {cidadaos[id].nome}:{Style.RESET_ALL}")
         print(f"{Fore.GREEN}{'-'*40}{Style.RESET_ALL}")
-        if len(self.reino_Jogador.cidadaos[id].conhecidos) > 0:
-            for i, relacao in enumerate(self.reino_Jogador.cidadaos[id].conhecidos):
+        if len(cidadaos[id].conhecidos) > 0:
+            for i, relacao in enumerate(cidadaos[id].conhecidos):
                 pessoa, pontos, status = relacao
                 print(f"[{i}] {pessoa} | Afinidade: {pontos} | Status: {status}")
         else:
@@ -293,20 +301,20 @@ class main:
     def DesignarProfissao(self):
         self.limpar_tela()
         self.tituloDoMenu("👥 Cidadãos do Reino")
-        self.printCidadao()
+        cidadaos = self.printCidadao()
 
         try:
             opcao = int(input('Escolha um cidadão: '))
-            if opcao == len(self.reino_Jogador.cidadaos):
+            if opcao == len(cidadaos):
                 print("Voltando...")
             else:
                 self.limpar_tela()
-                self.definirProfissao(opcao)
+                self.definirProfissao(opcao,cidadaos)
         except:
             print("Entrada inválida.")
             self.getch()
 
-    def definirProfissao(self,cidadao):
+    def definirProfissao(self,cidadao,cidadaos):
         self.tituloDoMenu("🧰 Designar Profissão")
         for i in range(len(self.Profissoes)):
             print(f"[{Fore.CYAN}{i}{Style.RESET_ALL}] {self.Profissoes[i].nome}")
@@ -318,9 +326,9 @@ class main:
                 print("Voltando...")
             else:
                 self.limpar_tela()
-                print(f"{Fore.BLUE}Profissão de {self.reino_Jogador.cidadaos[cidadao].nome}:{Style.RESET_ALL}")
+                print(f"{Fore.BLUE}Profissão de {cidadaos[cidadao].nome}:{Style.RESET_ALL}")
                 print("-" * 40)
-                self.control.DesginarCidadaoAProfissao(opcao, cidadao, self.Profissoes, self.reino_Jogador)
+                self.control.DesginarCidadaoAProfissao(opcao, cidadao, self.Profissoes, cidadaos)
                 self.getch()
         except:
             print("Entrada inválida.")
@@ -330,14 +338,13 @@ class main:
         self.limpar_tela()
         self.tituloDoMenu("📜 Gerenciar Ordens")
 
-        print(f"{Fore.LIGHTCYAN_EX}1{Style.RESET_ALL}. Adicionar ordem")
-        print(f"{Fore.LIGHTCYAN_EX}2{Style.RESET_ALL}. Ver ordem")
-        print(f"{Fore.LIGHTCYAN_EX}3{Style.RESET_ALL}. Cancelar ordem")
-        print(f"{Fore.LIGHTRED_EX}4{Style.RESET_ALL}. Voltar")
+        print(f"{Fore.CYAN}1{Style.RESET_ALL}. Adicionar ordem")
+        print(f"{Fore.CYAN}2{Style.RESET_ALL}. Ver ordem")
+        print(f"{Fore.CYAN}3{Style.RESET_ALL}. Cancelar ordem")
+        print(f"{Fore.RED}4{Style.RESET_ALL}. Voltar")
 
         #try:
         opcao = int(input('R: '))
-        self.limpar_tela()
         match opcao:
             case 1:
                 self.definirTipoTrabalho()
@@ -356,10 +363,12 @@ class main:
 
     def definirTipoTrabalho(self):
         intencao = "Area"
+        self.limpar_tela()
         max_x,min_x,max_y,min_y = self.selectionar_area()
         self.colocarOrdem(intencao,max_y,max_x,min_y,min_x)
         
     def colocarOrdem(self,intencao,max_x=-1,max_y=-1,min_x=-1,min_y=-1):
+        self.limpar_tela()
         Profissoes = self.mostrarOrdens()
         #try:
         opcao = int(input('Escolha uma ordem: '))
@@ -426,7 +435,7 @@ class main:
     def mostrarOrdens(self):
         Profissoes = self.reino_Jogador.getProfissoes()
         self.tituloDoMenu("➕ Selecionar Ordem")
-        print(f"Profissoes:{Profissoes}")
+
         for i in range(len(Profissoes)):
             print(f"{Fore.CYAN}{i}{Style.RESET_ALL}. {Profissoes[i].nome}")
         print(f"{Fore.RED}{len(Profissoes)}{Style.RESET_ALL}. Voltar")
@@ -436,13 +445,14 @@ class main:
 
     def menu_servicos_especiais(self):
         opcao = -1
-        while opcao != 3:
+        while opcao != 4:
             self.limpar_tela()
 
             self.tituloDoMenu("🏰 Serviços especiais do Reino")
             print(f"{Fore.BLUE}1.{Style.RESET_ALL} Militar")
             print(f"{Fore.BLUE}2.{Style.RESET_ALL} Religioso")
-            print(f"{Fore.RED}3.{Style.RESET_ALL} Sair")
+            print(f"{Fore.BLUE}3.{Style.RESET_ALL} Explorar")
+            print(f"{Fore.RED}4.{Style.RESET_ALL} Sair")
 
             opcao = int(input("R:"))
 
@@ -454,6 +464,8 @@ class main:
                 case 2:
                     self.religiao_menu()
                 case 3:
+                    self.Tela_Expedicao()
+                case 4:
                     print("Voltando...")
                 case _:
                     print("Comando invalido...")
@@ -545,7 +557,7 @@ class main:
                 print(f"{'═'*60}{Style.RESET_ALL}")
 
                 for i in range(len(construcao_com_animal.inventario)):
-                    print(f"{Fore.LIGHTCYAN_EX}{i}. {construcao_com_animal.inventario[i]['Nome'].nome}")
+                    print(f"{Fore.CYAN}{i}. {construcao_com_animal.inventario[i]['Nome'].nome}")
                 print(f'{Fore.RED}{len(construcao_com_animal.inventario)}. Continuar')
                 opcao_quantidade_pega = int(input("R: "))
 
@@ -578,6 +590,78 @@ class main:
         quantidadePega(quantidade_sacrificada_total,construcao_com_animal)
         self.getch()
     
+    def Tela_Expedicao(self):
+        self.limpar_tela()
+        self.tituloDoMenu(" Exploração ")
+
+        print(f"{Fore.CYAN}1{Style.RESET_ALL}. Realizar expedição")
+        print(f"{Fore.CYAN}2{Style.RESET_ALL}. Ver expedições em andamento")
+        print(f"{Fore.RED}3{Style.RESET_ALL}. Voltar")
+
+        opcao = int(input("R:"))
+
+        match opcao:
+            case 1:
+                self.Fazer_Expedicao()
+            case 2:
+                self.limpar_tela()
+                self.tituloDoMenu("Expedições em andamento")
+                self.reino_Jogador.mostrarExpedicao()
+                self.getch()
+
+    def Fazer_Expedicao(self):
+        opcao = -1
+        Equipe = Equipe_exploracao(self.reino_Jogador)
+
+        def ver_status(pessoa,Equipe):
+            self.limpar_tela()
+            print(f"Candidato: {pessoa.nome}")
+            pessoa.ShowStatus()
+            print("-"*60)
+            print(f"{Fore.CYAN}1{Style.RESET_ALL}. Indicar")
+            print(f"{Fore.RED}2. Voltar")
+            opcao_aceitar = int(input("R: "))
+
+            if opcao_aceitar == 1:
+                print("Adicionou")
+                if Equipe.membros == []:
+                    Equipe.membros.append({"Nome": pessoa, "Cargo": "Lider"})
+                else:
+                    Equipe.membros.append({"Nome": pessoa, "Cargo": "Membro"})
+            
+            self.getch()
+        
+        exploradores_potencial = []
+
+        for pessoa in self.reino_Jogador.cidadaos:
+            if pessoa.servico_militar is False and pessoa.explorando is False:
+                exploradores_potencial.append(pessoa)
+                
+        while opcao !=  len(exploradores_potencial):
+            self.limpar_tela()
+            self.tituloDoMenu(" Exploração ")
+            print("Quem será parte dessa espedição?")
+
+            for i,pessoa in enumerate(exploradores_potencial):
+                if any(m["Nome"] == pessoa for m in Equipe.membros):
+                    cor = Fore.LIGHTBLACK_EX
+                else:
+                    cor = Fore.CYAN
+                
+                print(f"{cor}{i}. {pessoa.nome}")
+            print(f"{Fore.LIGHTRED_EX}{len(exploradores_potencial)} Voltar")
+            if Equipe.membros != []:
+                print(f"{len(exploradores_potencial)+1} Continuar")
+            
+            opcao = int(input("R: "))
+
+            if opcao < len(exploradores_potencial):
+                ver_status(exploradores_potencial[opcao],Equipe)
+            elif opcao == len(exploradores_potencial)+1 and Equipe.membros != []:
+                self.limpar_tela()
+                self.tituloDoMenu(" Região ")
+                self.control.escolher_regiao(Equipe,self.reino_Jogador,self.relogio)
+        
     def Militar_menu(self):
         opcao = -1
         while opcao != 3:
@@ -605,13 +689,21 @@ class main:
     def Militar(self):
         opcao = -12
         while opcao != len(self.reino_Jogador.cidadaos):
+            def pegarCandidados():
+                cidadaos = []
+                for cidadao in self.reino_Jogador.cidadaos:
+                    if cidadao.explorando is False:
+                        cidadaos.append(cidadao)
+                return cidadaos
+                
             self.limpar_tela()
             self.tituloDoMenu("🏰 Soldados")
             
-            for i in range(len(self.reino_Jogador.cidadaos)):
-                txt = f"{Fore.CYAN}{i}{Style.RESET_ALL}. {self.reino_Jogador.cidadaos[i].nome} - "
+            cidadaos = pegarCandidados()
+            for i in range(len(cidadaos)):
+                txt = f"{Fore.CYAN}{i}{Style.RESET_ALL}. {cidadaos[i].nome} - "
 
-                if self.reino_Jogador.cidadaos[i].servico_militar:
+                if cidadaos[i].servico_militar:
                     fore = Fore.GREEN
                     estado = "Recrutado"
                 else:
@@ -620,19 +712,22 @@ class main:
                 txt += f"{fore}{estado}{Style.RESET_ALL}"
                 print(txt)
 
-            print(f"{Fore.RED}{len(self.reino_Jogador.cidadaos)}{Style.RESET_ALL}. Voltar")
+            print(f"{Fore.RED}{len(cidadaos)}{Style.RESET_ALL}. Voltar")
                 
             opcao = int(input('R: '))
             
-            if opcao != len(self.reino_Jogador.cidadaos):
-                if not self.reino_Jogador.cidadaos[opcao].servico_militar:
-                    self.SubMenuTitulo(f"{self.reino_Jogador.cidadaos[opcao].nome} foi recrutado")
-                    self.reino_Jogador.cidadaos[opcao].servico_militar = True
-                    self.reino_Jogador.exercito.exercito.append({"Soldado":self.reino_Jogador.cidadaos[opcao],"Ativo": False})
+            if opcao != len(cidadaos):
+                if not cidadaos[opcao].servico_militar:
+                    if self.reino_Jogador.retornarEspadasN() > len(self.reino_Jogador.exercito.exercito):
+                        self.SubMenuTitulo(f"{cidadaos[opcao].nome} foi recrutado")
+                        cidadaos[opcao].servico_militar = True
+                        self.reino_Jogador.exercito.exercito.append({"Soldado":cidadaos[opcao],"Ativo": False})
+                    else:
+                        print("> Não tem equipamento o bastante")
             
-                elif self.reino_Jogador.cidadaos[opcao].servico_militar:
-                   self.reino_Jogador.cidadaos[opcao].servico_militar = False
-                   self.reino_Jogador.exercito.exercito.remove({"Soldado":self.reino_Jogador.cidadaos[opcao],"Ativo": False})
+                elif cidadaos[opcao].servico_militar:
+                   cidadaos[opcao].servico_militar = False
+                   self.reino_Jogador.exercito.exercito.remove({"Soldado":cidadaos[opcao],"Ativo": False})
             
     # ---> Contruções
 
@@ -779,14 +874,14 @@ class main:
                         materiais_list.append(construcao.inventario[i])
                     else:
                         for material in materiais_list:
-                            if material["Nome"].nome == construcao.inventario[i]["Nome"].nome:
-                                material["Quantidade"] += construcao.inventario[i]["Quantidade"]
+                            if material.nome.nome == construcao.inventario[i].nome.nome:
+                                material.quantidade += construcao.inventario[i].quantidade
                 
         return materiais_list
 
     def MostrarMateriais(self,materiais):
         for i in range(len(materiais)):
-            print(f"{Fore.CYAN}{i}{Style.RESET_ALL}. {materiais[i]['Nome'].nome} - {materiais[i]['Quantidade']}")
+            print(f"{Fore.CYAN}{i}{Style.RESET_ALL}. {materiais[i].nome.nome} - {materiais[i].quantidade}")
 
     def selecionarMateriais(self,materiais_list,quantidade):
         
@@ -806,8 +901,8 @@ class main:
             print(f"Seu banco: {Fore.LIGHTYELLOW_EX}{self.reino_Jogador.ouro}")
             print(f"{Fore.YELLOW}{'_'*60}")
 
-            print(f"{Fore.LIGHTCYAN_EX}1{Style.RESET_ALL}. Proseguir")
-            print(f"{Fore.LIGHTRED_EX}2{Style.RESET_ALL}. Voltar")
+            print(f"{Fore.CYAN}1{Style.RESET_ALL}. Proseguir")
+            print(f"{Fore.RED}2{Style.RESET_ALL}. Voltar")
             opcao = int(input('R: '))
         
             match opcao:
@@ -988,9 +1083,9 @@ class main:
             print(f"{Fore.MAGENTA}{'═'*50}")
             print(f"{'HUMAN FORTRESS':^50}")
             print(f"{'═'*50}{Style.RESET_ALL}")
-            print("1. Jogar")
-            print("2. Carregar")
-            print("3. Sair")
+            print(f"{Fore.CYAN}1. Jogar")
+            print(f"{Fore.CYAN}2. Carregar")
+            print(f"{Fore.RED}3. Sair")
 
             #try:
             opcao = int(input('Escolha uma opção: '))
@@ -1118,7 +1213,7 @@ class main:
         
         print(f"{Fore.YELLOW}👑 Pelo que seu reino é conhecido?{Style.RESET_ALL}")
         for i, item in enumerate(persona_reino):
-            print(f"{Fore.LIGHTCYAN_EX}{i+1}{Style.RESET_ALL}. {item["Nome"]}, {item["Descrição"]}")        
+            print(f"{Fore.CYAN}{i+1}{Style.RESET_ALL}. {item["Nome"]}, {item["Descrição"]}")        
         personalidade_reino = int(input('R: '))
 
         while True:

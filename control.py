@@ -1,26 +1,9 @@
-from model.SobreMundo.Religiao import Religiao
-from model.Animais.animal_sapiente import Animal_Sapien
-from model.SobreMundo.Racas import Raca, Criatura
+from model.Estoque.estoque import Estoque,Estoque_semente
 from model.Meteriais.planta import Arvore, Macieira, Arbusto
 from model.Meteriais.Cenario import Pedregulho
-from model.SobreMundo.Reinos import Reino,Cultura
 from model.Meteriais.construcao import Posto_Comercio, Armazem,Armazem_Comida,Armazem_materiais,Demanda_tempo,Templo
 from model.Meteriais.material import Pedra,Madeira
-from colorama import Fore, Style, init
-from model.SobreMundo.mundo import Mundo, Regioes,Historia
-from model.Animais.monstro import Monstros
-from model.Animais.animal import (
-    Porco, Galinha, Cavalo,Gado, Gato, 
-    Cachorro, Coelho, Veado, Raposa, 
-    Urso, Coruja, Cobra, Camelo, 
-    Jacare, Sapo, Tartaruga, Lobo, 
-    Cabra, Tigre, Leao, Elefante, 
-    Anta, Ganso, Pato, Rato, 
-    Morcego, Ovelha, Pavao, GansoDomestico,
-    Lhama, Peru, Burro, Javali, Onca, 
-    Tamandua, BichoPreguica, Cervo, Falcao
-)
-
+from model.Meteriais.Itens import (espada)
 from model.Meteriais.comida import (
     Maca, Banana, Frutinha, Cogumelo, Queijo, Pao, Carne, Pescado,
     Trigo, Laranja, Uva, Morango, Tomate, Cenoura, Alface,
@@ -36,11 +19,33 @@ from model.Meteriais.comida import (
     cultivo_cebola, cultivo_abacaxi, cultivo_melancia, cultivo_manga,
     cultivo_pimentao, cultivo_espinafre, cultivo_coco, cultivo_azeitona
 )
+
 from model.SobreMundo.Eventos import Evento
+from model.SobreMundo.Reinos import Reino,Cultura,Ruinas_antigas,Reino_perdido,Exploracao
+from model.SobreMundo.Racas import Raca, Criatura
+from model.SobreMundo.Religiao import Religiao
+from model.SobreMundo.mundo import Mundo, Regioes,Historia
+
+from model.Animais.animal_sapiente import Animal_Sapien
+from model.Animais.monstro import Monstros
+from model.Animais.animal import (
+    Porco, Galinha, Cavalo,Gado, Gato, 
+    Cachorro, Coelho, Veado, Raposa, 
+    Urso, Coruja, Cobra, Camelo, 
+    Jacare, Sapo, Tartaruga, Lobo, 
+    Cabra, Tigre, Leao, Elefante, 
+    Anta, Ganso, Pato, Rato, 
+    Morcego, Ovelha, Pavao, GansoDomestico,
+    Lhama, Peru, Burro, Javali, Onca, 
+    Tamandua, BichoPreguica, Cervo, Falcao
+)
+
 
 import random
 import string
 import os
+import msvcrt
+from colorama import Fore, Style, init
 
 class Control:
     def __init__(self, raca_humana, n_regioes, 
@@ -68,6 +73,7 @@ class Control:
         self.chance_melhora_soldado_treino = 0.2
         self.chance_melhora_soldado_treino_original = 0.2
         self.Turnos_chance_melhora_soldado_treino = 0
+        self.chance_encontrar_estrutura = 0.35
 
         self.dia_treino = 0
 
@@ -149,6 +155,8 @@ class Control:
     def limpar_tela():
         os.system('cls' if os.name == 'nt' else 'clear')
 
+    def getch(self):
+        return msvcrt.getch().decode('utf-8')
     
 #---> Funções de preencher o mapa
     def ColocarObjetos(self,matriz, tamanho,QuantidadeObjetos,regiao_jogador, reino_Jogador):
@@ -208,10 +216,7 @@ class Control:
             animal_escolhido = animal()
             if animal_escolhido.tipo == "Domestico":
                 quantidade = random.randint(80,880)
-                reino_Jogador.construcoes[1].inventario.append({
-                    "Nome": animal_escolhido,
-                    "Quantidade": quantidade
-                })
+                reino_Jogador.construcoes[1].inventario.append(Estoque(animal_escolhido,quantidade))
         self.Colocar_Vegetal(regiao_jogador, reino_Jogador)
         self.Colocar_Material(regiao_jogador, reino_Jogador)
         self.colocarSemente(reino_Jogador,regiao_jogador)
@@ -225,19 +230,17 @@ class Control:
             quantidade = random.randint(10, 25)
             encontrado = False
 
-            # Procura se já há uma instância do mesmo tipo
             for entrada in armazem:
-                if isinstance(entrada["Nome"], AnimalClasse):
-                    entrada["Quantidade"] += quantidade
+                print(entrada)
+                if isinstance(entrada.nome, AnimalClasse):
+                    entrada.quantidade += quantidade
                     encontrado = True
                     break
 
             # Se não encontrou, adiciona novo item ao inventário
             if not encontrado:
-                armazem.append({
-                    "Nome": AnimalClasse(),  # ou "Nome": "Porco", "Objeto": Porco()
-                    "Quantidade": quantidade
-                })
+                estoque = Estoque(AnimalClasse(),quantidade)
+                armazem.append(estoque)
 
 
     def colocarAgua(self,matriz, tipo="lago", quantidade=1, tamanho_max=20):
@@ -280,10 +283,7 @@ class Control:
             item = item()
             quantidade = random.randint(1,20)
 
-            reino_Jogador.construcoes[3].inventario.append({
-                "Nome": item,
-                "Quantidade": quantidade
-            })
+            reino_Jogador.construcoes[3].inventario.append(Estoque(item,quantidade))
     
     def Definir_Soldados(self,reino_Jogador):
         Exercito = []
@@ -297,6 +297,10 @@ class Control:
             Exercito.append({"Soldado":cidadao,"Ativo": False})
 
         reino_Jogador.exercito.exercito = Exercito
+
+        for construcao in reino_Jogador.construcoes:
+            if isinstance(construcao,Armazem_materiais):
+                construcao.inventario.append(Estoque(espada(Pedra()),len(Exercito)))
     
     def Definir_Sacerdote(self,reino_Jogador):
         n_sacerdotes = 2
@@ -324,11 +328,7 @@ class Control:
             for vegetacao in regiao_jogador.vegetacao:
                 vegetacao = vegetacao()
                 if isinstance(seed.resultado,type(vegetacao)):
-                    reino_Jogador.construcoes[2].inventario.append({
-                        "Nome": seed.semente,
-                        "Quantidade": random.randint(1,10),
-                        "Tipo Cultivo": seed
-                    })
+                    reino_Jogador.construcoes[2].inventario.append(Estoque_semente(seed.semente,random.randint(1,10),seed))
 
     def Colocar_Vegetal(self, regiao_jogador, reino_Jogador):
         n_comida = reino_Jogador.Comida
@@ -340,10 +340,7 @@ class Control:
             vegetal = vegetal_class()
             quantidade = min(comida_por_item, n_comida)
             n_comida -= quantidade
-            reino_Jogador.construcoes[2].inventario.append({
-                "Nome": vegetal,
-                "Quantidade": quantidade
-            })
+            reino_Jogador.construcoes[2].inventario.append(Estoque(vegetal,quantidade))
 
         # Adiciona outras comidas
         self.Colocar_comida(reino_Jogador, n_comida, comida_por_item)
@@ -354,10 +351,7 @@ class Control:
         for comida_class in Comida:
             quantidade = min(comida_por_item, n_comida_restante)
             n_comida_restante -= quantidade
-            reino_Jogador.construcoes[2].inventario.append({
-                "Nome": comida_class(),
-                "Quantidade": quantidade
-            })
+            reino_Jogador.construcoes[2].inventario.append(Estoque(comida_class(),quantidade))
     
     def MapaGerar(self,matriz, tamanho):  
         matriz.clear()  # Limpa a matriz antes de criar uma nova
@@ -367,25 +361,59 @@ class Control:
                 Linha.append(".")
             matriz.append(Linha)
     
+    def tela(self,texto):
+        self.limpar_tela()
+        print(f"\033[33m=\033[0m"*60)
+        print(f"{f'{Fore.YELLOW}{texto}':^50}")
+        print(f"\033[33m=\033[0m"*60)
+
     def AcoesMapa(self,reino,Mapa,matriz, tamanho, relogio,pausado,regiao):
         self.Evento_Definir(reino,relogio,pausado,matriz)
+        
+        for expedicao in reino.expedicoes:
+            if relogio.dia - expedicao["Dia inicial"] == expedicao["Dias"] and expedicao["Grupo"].Explorando:
+                
+                self.tela("Exploração")
+                expedicao["Local"].Aventura(expedicao["Grupo"])
 
+                expedicao["Grupo"].Explorando = False
+                expedicao["Grupo"].Voltando = True
+
+                print(f"{Fore.LIGHTYELLOW_EX}> Pressione qualquer tecla para continuar")
+                self.getch()
+
+            elif relogio.dia - expedicao["Dia inicial"] == expedicao["Dias"]*2 and expedicao["Grupo"].Voltando:
+                self.tela("O Bom filho volta a casa!")
+
+                for integrante in expedicao["Grupo"].membros:
+                    integrante["Nome"].Dentro_estrutura = False
+                    integrante["Nome"].explorando = False
+                
+                reino.expedicoes.remove(expedicao)
+
+                print(f"> A equipe voltou ao reino")
+                print(f"{Fore.LIGHTYELLOW_EX}> Pressione qualquer tecla para continuar")
+                self.getch()
+        
         for humano in reino.cidadaos:
-            self.Diminuir_Fome(humano,reino)
-            self.Definir_sono(humano,relogio,reino)
-            self.Acao_conforme_necessidade(reino,humano)
-            if not humano.Dentro_estrutura:
-                humano.movimentar(tamanho,relogio, matriz,reino,self.Objetos)
-                Mapa[humano.x][humano.y] = humano.simbolo
+            if humano.explorando is False:
+                self.Diminuir_Fome(humano,reino)
+                self.Definir_sono(humano,relogio,reino)
+                self.Acao_conforme_necessidade(reino,humano)
+                if not humano.Dentro_estrutura:
+                    humano.movimentar(tamanho,relogio, matriz,reino,self.Objetos)
+                    Mapa[humano.x][humano.y] = humano.simbolo
 
         for construcao in reino.construcoes:
             if isinstance(construcao,Demanda_tempo):
                 construcao.acao_tempo(reino,matriz,relogio,regiao)
+        
         self.Reproduzir_animais(reino,relogio)
 
     def Evento_Definir(self,reino, relogio, pausado,Mapa):
         if relogio.dia % 1 == 0 and self.evento.ultimo_evento_dia != relogio.dia:
             self.evento.ultimo_evento_dia = relogio.dia
+            self.tela("Evento")
             self.evento.evento_estacional(self.Mundo_criado, reino,Mapa)
             self.limpar_tela()
         else:
@@ -463,13 +491,13 @@ class Control:
                 humano.felicidade += 35
 
         
-        elif not humano.Dentro_estrutura and relogio.hora > 21:
+        elif not humano.Dentro_estrutura and relogio.hora > 21 and humano.acao_momento[0] != "Trabalhar":
         
             humano.acao_momento[0] = "Socializar"
             if humano.felicidade >0:
                 humano.felicidade -= 2
         
-        elif relogio.hora == 5:
+        elif relogio.hora == 5 and humano.acao_momento[0] != "Trabalhar":
             for construcao in reino.construcoes:
                 if humano in construcao.inventario:
                     construcao.inventario.remove(humano)
@@ -482,10 +510,10 @@ class Control:
         for construcao in reino.construcoes :
             if construcao.nome == "Armazem":
                 for animal in construcao.inventario:
-                    if animal['Quantidade'] >1 and relogio.dia % animal['Nome'].Tempo_reproducao == 0:
+                    if animal.quantidade >1 and relogio.dia % animal.nome.Tempo_reproducao == 0:
                         chance = random.random()
                         if chance <= self.chance_reproducao:
-                            animal['Quantidade'] += animal['Quantidade'] // 2
+                            animal.quantidade += animal.quantidade // 2
         
                             if self.chance_reproducao != self.chance_reproducao_original and self.Turnos_reproducao != 0:
                                 self.Turnos_reproducao -= 1
@@ -532,9 +560,9 @@ class Control:
     def VerificarProximidade(self,h1, h2):
         return abs(h1.x - h2.x) <= 1 and abs(h1.y - h2.y) <= 1
 
-    def DesginarCidadaoAProfissao(self,opcao, cidadao_id, Profissoes, reino_Jogador):
+    def DesginarCidadaoAProfissao(self,opcao, cidadao_id, Profissoes, cidadaos):
         # Acessando o cidadão pelo índice (cidadao_id)
-        cidadao = reino_Jogador.cidadaos[cidadao_id]
+        cidadao = cidadaos[cidadao_id]
 
         # Mostrando a profissão atual (caso já tenha uma profissão)
         if hasattr(cidadao, 'profissao'):
@@ -578,6 +606,32 @@ class Control:
         else:
             print("Os soldados estão cansados demais para treinar por hoje....")
     
+    def escolher_regiao(self,grupo,reino,relogio):
+
+        for i, item in enumerate(self.RegioesList):
+            print(f"{Fore.CYAN}{i}. {item.nome}")
+        print(f"{Fore.RED}{len(self.RegioesList)}.voltar")
+        opcao = int(input("R:"))
+
+        tempo = 1#random.randint(5,20)
+
+        chance_encontro = random.random()
+
+        grupo.regiao = self.RegioesList[opcao]
+
+        for pessoa in grupo.membros:
+            pessoa["Nome"].Dentro_estrutura = True
+            pessoa["Nome"].explorando = True
+
+        if chance_encontro <= self.chance_encontrar_estrutura:
+            local = random.choice(self.RegioesList[opcao].Estruturas)           
+        else:
+            local = Exploracao(self.Mundo_criado)
+        
+        reino.expedicoes.append({"Grupo": grupo , "Local": local,"Dias": tempo, "Dia inicial": relogio.dia, "Ano inicio": relogio.ano,"Data":relogio.mostrar_data()})
+
+        print("> O grupo saiu em viagem...")
+
     def gerarCriatura(self):
         nomes = [
             {"vida": random.randint(100,150), "dano": random.randint(40,45), "altura": "Alto", "aparencia": "Rude", "forca":3, "destreza":1, "inteligencia":1, "carisma":1, "constituicao":2},
@@ -733,9 +787,9 @@ class Control:
         def Gerar_Caracteristicas():
             match personalidade:
                 case "Beligerante":
-                    reino_jogador.exercito.moral += 75
+                    reino_jogador.exercito.moral += 25
                     reino_jogador.exercito.preparo += 1
-                    reino_jogador.exercito.moralMax += 75
+                    reino_jogador.exercito.moralMax += 25
                 case "Religioso":
                     reino_jogador.magia += 2
                         
@@ -960,6 +1014,18 @@ class Control:
                 cultura_criada = reino.gerarCultura(regiao.temperatura)
                 self.Cultura_Lista.append(cultura_criada)
 
+    def gerarEstruturas(self):
+        for regiao in self.RegioesList:
+            def gerar_local(regiao):
+                quantidade = random.randint(10,30)
+                locais = [Ruinas_antigas,Reino_perdido]
+
+                for i in range(quantidade):
+                    local = random.choice(locais)
+                    raca = random.choice(self.Racas)
+                    regiao.Estruturas.append(local(raca,self.Mundo_criado))
+            gerar_local(regiao)
+
     def GerarHistoria(self):
         self.historia = Historia(self.Mundo_criado,self.Ano)
         self.historia.IniciarHistoria()
@@ -972,6 +1038,7 @@ class Control:
         self.criarRegioes()
         self.CriarReligiao()
         self.Mundo_criado = self.criarMundo()
+        self.gerarEstruturas()
         self.GerarHistoria()
 
     # Outras funções devem seguir a mesma lógica
