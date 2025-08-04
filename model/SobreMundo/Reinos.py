@@ -236,19 +236,20 @@ class Reino:
         def retornarPessoas(equipe):
             texto = "   Integrandes: "
             for pessoa in equipe:
-                if pessoa["Cargo"] == "Lider":
+                if pessoa.posicao == "Lider":
                     cor = Fore.LIGHTYELLOW_EX
                 else:
                     cor = Fore.LIGHTGREEN_EX
-                texto +=f"\n     • {pessoa["Nome"]},{cor} {pessoa["Cargo"]}{Style.RESET_ALL}"
+                texto +=f"\n     • {pessoa.pessoa},{cor} {pessoa.posicao}{Style.RESET_ALL}"
             return texto
         
         if self.expedicoes != []:
             for i , exploracao in enumerate(self.expedicoes):
-                grupo = exploracao["Grupo"].membros
-                data = exploracao["Ano inicio"]
+                grupo = exploracao.grupo.membros
+                data = exploracao.Data
                 membros = retornarPessoas(grupo)
-                print(f"{Fore.LIGHTCYAN_EX}{i+1}{Style.RESET_ALL}. {len(grupo)} pessoas sairam no dia {data}")
+                print(f"{Fore.LIGHTCYAN_EX}{i+1}{Style.RESET_ALL}. {len(grupo)} pessoas sairam na data {data}")
+                exploracao.Descricao()
                 print(f"{membros}")
         else:
             print("> Não há expedições em andamento")
@@ -423,6 +424,7 @@ class Exercito:
         else:
             print("O treino não foi muito frutifero")
 
+
 class Combate:
     def __init__(self):
         self.timer = 0.5
@@ -430,32 +432,32 @@ class Combate:
     def getch(self):
         return msvcrt.getch().decode('utf-8')
 
+    def Metodo_derrota(self,jogador,inimigo,mapa):
+        ouro = 0
+        if jogador.ouro > 0:
+            ouro = random.randint(1,jogador.ouro//3)
+            jogador.ouro -= ouro
+                
+        total = jogador.calcular_total_comida()
+        quantidade_comida = random.randint(total // 6, total // 5)
+
+        construcoes_destruidas = 0
+        for construcao in jogador.construcoes:
+            if construcao.nome != "Armazem de comida" and construcao.nome != "Armazem de materiais":
+                construcao.vida -= self.definir_vitoria(inimigo)
+                if construcao.vida <= 0:
+                    construcoes_destruidas += 1
+                    mapa[construcao.x][construcao.y] = "_"
+                    jogador.construcoes.remove(construcao)
+                
+        print(f"\n{Fore.RED + Style.BRIGHT}======|            DERROTA           |======{Style.RESET_ALL}")
+        print(f"{Fore.MAGENTA}Você perdeu {ouro} de ouro.")
+        print(f"{Fore.MAGENTA}Você perdeu {quantidade_comida} de comida.")
+        print(f"{Fore.MAGENTA}{construcoes_destruidas} construções foram destruídas.{Style.RESET_ALL}")
+
+        self.tirar_comida(quantidade_comida,jogador)
+        
     def rodada(self, reino, inimigo, tatica_jogador, tatica_inimigo,jogador,mapa):
-
-        def Metodo_derrota():
-            ouro = 0
-            if jogador.ouro > 0:
-                ouro = random.randint(1,jogador.ouro//3)
-                jogador.ouro -= ouro
-                
-            total = jogador.calcular_total_comida()
-            quantidade_comida = random.randint(total // 6, total // 5)
-
-            construcoes_destruidas = 0
-            for construcao in jogador.construcoes:
-                if construcao.nome != "Armazem de comida" and construcao.nome != "Armazem de materiais":
-                    construcao.vida -= media_inimigo
-                    if construcao.vida <= 0:
-                        construcoes_destruidas += 1
-                        mapa[construcao.x][construcao.y] = "_"
-                        jogador.construcoes.remove(construcao)
-                
-            print(f"\n{Fore.RED + Style.BRIGHT}======|            DERROTA           |======{Style.RESET_ALL}")
-            print(f"{Fore.MAGENTA}Você perdeu {ouro} de ouro.")
-            print(f"{Fore.MAGENTA}Você perdeu {quantidade_comida} de comida.")
-            print(f"{Fore.MAGENTA}{construcoes_destruidas} construções foram destruídas.{Style.RESET_ALL}")
-
-            self.tirar_comida(quantidade_comida,jogador)
         
         if inimigo != [] and reino != []:
             resultado = self.resultado_tatica(tatica_jogador, tatica_inimigo)
@@ -527,10 +529,10 @@ class Combate:
                         
                         print(f"{Fore.YELLOW}Você escravisou {quantidade_escravos} pessoas\n")
             else:
-                Metodo_derrota()
+                self.Metodo_derrota(jogador,inimigo,mapa)
                 
         else:
-            Metodo_derrota()
+            self.Metodo_derrota(jogador,inimigo,mapa)
         
         self.desativer_Exercito(reino)
 
@@ -677,6 +679,7 @@ class Equipe_exploracao:
         self.regiao = None
         self.Explorando = True
         self.Voltando = False
+        self.loot = None
 
 class Tribo:
     def __init__(self,raca):
@@ -687,6 +690,7 @@ class Tribo:
 
         self.gerarIntegrantes(raca)
         self.definirDescricao()
+        
     
     def gerarIntegrantes(self,raca):
         quantidade = random.randint(4,10)
@@ -702,137 +706,33 @@ class Tribo:
     def definirDescricao(self):
         if self.agressividade:
             self.descricao = (
-                f"Essa tribo {self.raca.nome} vestem peles de inimigos mortos e adornam os corpos com ossos humanos. "
+                f"Essa tribo de {self.raca.nome} vestem peles de inimigos mortos e adornam os corpos com ossos humanos. "
                 f"O fedor de sangue seco e carne apodrecida anuncia sua presença antes mesmo que sejam vistos. "
-                f"Olhos selvagens e lanças manchadas de sangue revelam que não conhecem piedade."
             )
         else:
             self.descricao = (
-                f"Essa tribo {self.raca.nome} vive de forma pascifica. "
+                f"Essa tribo de {self.raca.nome} vive de forma pascifica. "
                 f"Suas vestes são feitas de fibras vegetais e peles de caça ritual. "
                 f"Embora cautelosos com estranhos, seus olhos não carregam ódio, mas sim desconfiança. "
-                f"São mestres em ervas, armadilhas e sabedoria ancestral transmitida por gerações."
             )
+    
+    def TesteCarisma(self):
+        carisma = 0
+        for p in self.membros:
+            carisma += p.carisma
+
+        medias = carisma/len(self.membros)
+        return medias
 
 class Exploracao:
     def __init__(self,mundo):
         self.mundo = mundo
     
-    def Combater(self,grupo):
-        dano = 0
-
-        for p in grupo.membros:
-            dano += p.dano
-
-        medias = dano/len(grupo.membros)
-        return medias
-    
     def Aventura(self,grupo):
 
-        def sortear_comida():
-            quantidade = random.randint(1, len(grupo.regiao.vegetacao) - 1)
-            comidas = random.sample(grupo.regiao.vegetacao, quantidade)
-            return comidas, quantidade
-
-        def sortear_recursos():
-            recursos = [espada, armadura, escudo, adorno, Tapecaria, vasos]
-            quantidade = random.randint(1, len(recursos) - 1)
-            recursos_sorteados = random.sample(recursos, quantidade)
-            return recursos_sorteados, quantidade
-
-        def distribuir_comida(comidas, quantidade_comida):
-            quantidade_por_item = max(1, quantidade_comida // len(comidas))
-            for comida_classe in comidas:
-                for construcao in grupo.reino.construcoes:
-                    if isinstance(construcao, Armazem_Comida):
-                        for item in construcao.inventario:
-                            if isinstance(item.nome, comida_classe):
-                                item.quantidade += quantidade_por_item
-                                break
-                        else:
-                            construcao.inventario.append(Estoque(comida_classe(),quantidade_por_item))
-
-        def distribuir_recursos(recursos, quantidade_total):
-            materiais_classes = [Madeira, Pedra, Cobre, Argila, Vidro, Bronze, Obsidiana, Cristal]
-            quantidade_por_item = max(1, quantidade_total // len(recursos))
-            for recurso_classe in recursos:
-                material = random.choice(materiais_classes)()
-                print(material)
-                recurso_instancia = recurso_classe(material)
-                for construcao in grupo.reino.construcoes:
-                    if isinstance(construcao, Armazem_materiais):
-                        for item in construcao.inventario:
-                            if isinstance(item.nome, recurso_classe):
-                                item.quantidade += quantidade_por_item
-                                break
-                        else:
-                            construcao.inventario.append(Estoque(recurso_instancia,quantidade_por_item))
-
-        def premio():
-            grupo.reino.ouro += (quantidade_ouro := random.randint(1, 20))
-
-            comidas, qtd_comidas = sortear_comida()
-            recursos, qtd_recursos = sortear_recursos()
-
-            distribuir_comida(comidas, qtd_comidas)
-            distribuir_recursos(recursos, qtd_recursos)
-
-            print(f"\n{Fore.YELLOW + Style.BRIGHT}======|            VITÓRIA!          |======{Style.RESET_ALL}")
-            print(f"{Fore.YELLOW}Você saqueou {quantidade_ouro} moedas de ouro.{Style.RESET_ALL}\n")
-
-            print(f"{Fore.GREEN + Style.BRIGHT}>> Comida Coletada:{Style.RESET_ALL}")
-            for comida in comidas:
-                print(f"{Fore.GREEN}- {comida.__name__}: {qtd_comidas // len(comidas)} unidades{Style.RESET_ALL}")
-
-            print(f"\n{Fore.CYAN + Style.BRIGHT}>> Itens Criados:{Style.RESET_ALL}")
-            for recurso in recursos:
-                print(f"{Fore.CYAN}- {recurso.__name__}: {qtd_recursos // len(recursos)} unidade(s){Style.RESET_ALL}")
-                
-        def Tribo_local():
-            raca = random.choice(self.mundo.racas)
-            grupo_tribo = Tribo(raca)
-            
-            opcao = 0
-            Decidido = False
-
-            while opcao != 4 and Decidido is False:
-                print(f"O grupo achou uma tribo de {len(grupo_tribo.membros)} {grupo_tribo.raca.nome}")
-                print("O que eles deveriam fazer?")
-                print(f"{Fore.LIGHTCYAN_EX}1{Style.RESET_ALL}. Ataca-los")
-                print(f"{Fore.LIGHTCYAN_EX}2{Style.RESET_ALL}. Tentar se comunicar")
-                print(f"{Fore.LIGHTCYAN_EX}3{Style.RESET_ALL}. Observar-los de longe")
-                print(f"{Fore.LIGHTCYAN_EX}4{Style.RESET_ALL}. Deixa-los em paz")
-                opcao = int(input("R: "))
-
-                match opcao:
-                    case 1:
-                        poder_tribo = self.Combater(grupo_tribo)
-                        poder_grupo = self.Combater(grupo)
-
-                        if poder_grupo > poder_tribo:
-                            print(f"{Fore.LIGHTGREEN_EX}> Seu grupo consegue esmagar a tribo. Mulheres, crianças e idosos, todos foram extintos")
-                            premio()
-                        else:
-                            print(f"{Fore.LIGHTMAGENTA_EX}> Apesar de você ter iniciado o ataque, foi a tribo que conseguiu a vitoria e afugentou seu grupo")
-                        Decidido = True
-                    case 2:
-                        if grupo_tribo.agressividade:
-                            print(f"{Fore.LIGHTMAGENTA_EX}> Seu grupo se aproxima, mas no momento em que a tribo os vê, eles partem para cima e afugentam seu grupo")
-                        else:
-                            print(f"{Fore.LIGHTGREEN_EX}> Apesar do estranhamento inicial, seu grupo conseguiu estabelecer algum contato com a tribo.\n Como presente de boa fé, receberam alguns recursos")
-                            premio()
-                        Decidido = True
-                    case 3:
-                        chance = random.random()
-
-                        if chance >= 0.85:
-                            print(f"> Seu grupo os observa de loge e concluiu que {grupo_tribo.descricao}")
-                        else:
-                            print(f"> Mesmo observando-os por um tempo, não foi possível indentificar suas intenções")
-        
         def coletar_comida():
-            comidas, qtd_comidas = sortear_comida()
-            distribuir_comida(comidas, qtd_comidas)
+            comidas, qtd_comidas = sortear_comida(grupo)
+            distribuir_comida(comidas,grupo, qtd_comidas)
 
             quantidade_individual = qtd_comidas//len(comidas)
 
@@ -844,7 +744,7 @@ class Exploracao:
             print(f"\n{Fore.MAGENTA + Style.BRIGHT}Você encontrou uma vila abandonada...{Style.RESET_ALL}")
             
             recursos, qtd_recursos = sortear_recursos()
-            distribuir_recursos(recursos, qtd_recursos)
+            distribuir_recursos(recursos, grupo,qtd_recursos)
             # Armazenar no reino
             grupo.reino.ouro += (quantidade_ouro := random.randint(1, 20))
             quantidade_individual = qtd_recursos//len(recursos)
@@ -854,8 +754,8 @@ class Exploracao:
             for i in range(len(recursos)):
                 print(f"{Fore.GREEN}- {recursos[i].__name__}: {quantidade_individual} unidades{Style.RESET_ALL}")
         
-        evento = random.choice([Tribo_local,coletar_comida,coletar_recursos_vila_abandonada])
-        evento() 
+        evento = random.choice([coletar_comida,coletar_recursos_vila_abandonada])
+        grupo.loot = evento
 
 class localizacao_Especial:
     def __init__(self,tipo,mundo):
@@ -865,8 +765,86 @@ class localizacao_Especial:
         self.tipo = tipo
         self.descricao = ''
     
+    def Combater(self,grupo,tipo):
+        dano = 0
+        if tipo == "Tribo":
+            for p in grupo.membros:
+                dano += p.dano
+        else:
+            for p in grupo.membros:
+                dano += p.pessoa.dano
+
+        medias = dano/len(grupo.membros)
+        return medias
+
+    def Escaldante(self) -> str:
+        return ""
+
+    def Quente(self) -> str:
+        return ""
+
+    def Brumosa(self) -> str:
+        return ""
+
+    def Fria(self) -> str:
+        return ""
+
+    def Congelada(self) -> str:
+        return ""
+  
+    def descricaoClima(self,clima):
+
+        match clima:
+            case "Congelada":
+                self.Congelada()
+            case "Fria":
+                self.Fria()
+            case "Brumosa":
+                self.Brumosa()
+            case "Quente":
+                self.Quente()
+            case "Escaldante":
+                self.Escaldante()
+    
+    def lutarMonstro(self,grupo,monstro):
+        testeGrupo = self.Combater(grupo,"Grupo")
+        testeMonstro = monstro.forca
+
+        if testeGrupo >= testeMonstro:
+            return True
+        else:
+            return False
+
+    def TesteCarisma(self,grupo):
+        carisma = 0
+        for p in grupo.membros:
+            carisma += p.pessoa.carisma
+
+        medias = carisma/len(grupo.membros)
+        return medias
+
+    def TesteInteligencia(self,grupo):
+        inteligencia = 0
+        for p in grupo.membros:
+            inteligencia += p.pessoa.inteligencia
+
+        medias = inteligencia/len(grupo.membros)
+        return medias
+    
+    def TesteDestreza(self,grupo):
+        destreza = 0
+        for p in grupo.membros:
+            destreza += p.pessoa.destreza
+
+        medias = destreza/len(grupo.membros)
+        return medias
+
+    def aventurarse(self):
+        print(f"Ahhhh")
+
     def Aventura(self,grupo):
         print(f"O grupo achou o {self.nome} do tipo {self.tipo}")
+        grupo.loot = self.aventurarse
     
 class Reino_perdido(localizacao_Especial):
     def __init__(self,raca,mundo):
@@ -943,4 +921,301 @@ class Ruinas_antigas(localizacao_Especial):
 
         self.mundo.estruturas.append(self)
 
+class Tribo_Encontro(localizacao_Especial):
+    def __init__(self,raca,mundo):
+        super().__init__("Encontro com tribo",mundo)
+        self.raca = raca
+    
+    def Aventura(self, grupo):
+        self.Tribo_local(grupo)
+    
+    def Tribo_local(self,grupo):
+        raca = self.raca
+        grupo_tribo = Tribo(raca)
+            
+        opcao = 0
+        Decidido = False
+        Observacao = False
+
+        def premio():
+            grupo.reino.ouro += (quantidade_ouro := random.randint(1, 20))
+
+            comidas, qtd_comidas = sortear_comida(grupo)
+            recursos, qtd_recursos = sortear_recursos()
+
+            distribuir_comida(comidas,grupo, qtd_comidas)
+            distribuir_recursos(recursos,grupo, qtd_recursos)
+
+            print(f"\n{Fore.YELLOW + Style.BRIGHT}======|            VITÓRIA!          |======{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Você saqueou {quantidade_ouro} moedas de ouro.{Style.RESET_ALL}\n")
+
+            print(f"{Fore.GREEN + Style.BRIGHT}>> Comida Coletada:{Style.RESET_ALL}")
+            for comida in comidas:
+                print(f"{Fore.GREEN}- {comida.__name__}: {qtd_comidas // len(comidas)} unidades{Style.RESET_ALL}")
+
+            print(f"\n{Fore.CYAN + Style.BRIGHT}>> Itens Criados:{Style.RESET_ALL}")
+            for recurso in recursos:
+                print(f"{Fore.CYAN}- {recurso.__name__}: {qtd_recursos // len(recursos)} unidade(s){Style.RESET_ALL}")
+        
+
+        while opcao != 4 and Decidido is False:
+            print(f"O grupo achou uma tribo de {len(grupo_tribo.membros)} {grupo_tribo.raca.nome}")
+            print("O que eles deveriam fazer?")
+            print(f"{Fore.LIGHTCYAN_EX}1{Style.RESET_ALL}. Ataca-los")
+            print(f"{Fore.LIGHTCYAN_EX}2{Style.RESET_ALL}. Tentar se comunicar")
+            print(f"{Fore.LIGHTCYAN_EX}3{Style.RESET_ALL}. Observar-los de longe")
+            print(f"{Fore.LIGHTCYAN_EX}4{Style.RESET_ALL}. Deixa-los em paz")
+            opcao = int(input("R: "))
+
+            match opcao:
+                case 1:
+                    poder_tribo = self.Combater(grupo_tribo,"Tribo")
+                    poder_grupo = self.Combater(grupo,"Jogador")
+
+                    if poder_grupo > poder_tribo:
+                        print(f"{Fore.LIGHTGREEN_EX}> Seu grupo avança por detrás das arvores, com furia, fogo e ferro\n>A tribo se volta, despreparada, para o gruo\n>A batalha foi violenta, mas rapida e seu grupo conseguiu\nmatar ou afungentar os membros da tribo")
+                        grupo.loot = premio
+                    else:
+                        print(f"{Fore.LIGHTMAGENTA_EX}> Apesar de você ter iniciado o ataque, foi a tribo que conseguiu a vitoria e afugentou seu grupo")
+                    Decidido = True
+                case 2:
+                    carisma = self.TesteCarisma(grupo)
+                    carisma_Tribo = grupo_tribo.TesteCarisma()
+                    if carisma >= carisma_Tribo:
+                        print(f"{Fore.LIGHTGREEN_EX}> Apesar do estranhamento inicial, seu grupo conseguiu estabelecer algum contato com a tribo.\n Como presente de boa fé, receberam alguns recursos")
+                        grupo.loot = premio
+                    else:
+                        if grupo_tribo.agressividade:
+                            print(f"{Fore.LIGHTMAGENTA_EX}> Seu grupo se aproxima, mas no momento em que a tribo os vê, eles partem para cima e afugentam seu grupo")
+                        else:
+                            print(f"{Fore.LIGHTMAGENTA_EX}> Seu grupo se aproxima, mas no momento em que a tribo os vê, eles mantem uma posição defencia.\nO impasse se extende por longos instantes até seu grupo perceber que eles não estão dispostos a conversar")
+                    Decidido = True
+                case 3:
+                    if Observacao is False:
+                        chance = random.random()
+                        Observacao = True
+                        if chance >= 0.85:
+                            print(f"> Seu grupo os observa de loge e concluiu que {grupo_tribo.descricao}")
+                        else:
+                            print(f"> Mesmo observando-os por um tempo, não foi possível indentificar suas intenções")
+                    else:
+                        print(f"> Não há mais nada a observar")
+
+class Roubo_item(localizacao_Especial):
+    def __init__(self, tipo, mundo):
+        super().__init__(tipo, mundo)
+        self.procurou = False
+        self.Divinacao = False
+        self.Encerrou = False
+
+    def Aventura(self, grupo):
+        opcao = -1
+        criatura = random.choice(grupo.regiao.Criaturas)
+        criatura = Animal_Sapien(criatura.simbolo,criatura.vida,criatura.dano,random.randint(15,300),criatura,0,0)
+
+        while self.Encerrou is False:
+            print("O grupo havia conseguido alguns itens durante a viagem então descidiram descançar num acampamento improvisado\nMas, no que acordaram, perceberam a falta dos recursos e pegadas indo a floresta.\n\"Deve ter sido um dos monstros que espreitam a mata\" Diz um deles\n\nEles discutem soluções\nO que devem fazer?")
+            print(f"1. Procurar pelos itens")
+            print(f"2. Fazer uma divinação para achar o culpado")
+            print(f"3. Dessitir e voltar")
+            opcao = int(input("R: "))
+
+            match opcao:
+                case 1:
+                    self.procurar(grupo,criatura)
+                case 2:
+                    self.divinacao(grupo,criatura)
+                case 3:
+                    print(f"{Fore.LIGHTMAGENTA_EX}> O grupo retorna, cabisbaixo")
+                    self.Encerrou = True
+
+    def Congelada(self) -> str:
+        return "Um ninho encravado em uma geleira antiga, coberto por estalactites de gelo e envolto por ventos cortantes. Poucas criaturas se arriscam tão ao norte."
+
+    def Fria(self) -> str:
+        return "O ninho está escondido entre pinheiros cobertos de neve, com galhos secos e musgos congelados protegendo os ovos do vento glacial."
+
+    def Brumosa(self) -> str:
+        return "Envolto por uma névoa espessa, o ninho repousa em um pântano silencioso. A umidade constante e a baixa visibilidade o tornam praticamente invisível."
+
+    def Quente(self) -> str:
+        return "Localizado em uma savana dourada, o ninho é feito de folhas secas e ossos de presas, sob o sol intenso e entre o canto de predadores diurnos."
+
+    def Escaldante(self) -> str:
+        return "Escavado em uma cratera vulcânica, o ninho é feito de rochas negras e cinzas endurecidas, com vapores quentes saindo de fendas próximas. Um lar mortal para qualquer intruso."
+
+    def confronto(self,grupo,monstro):
+        clima = Clima_regiao(grupo.regiao)
+        text = self.descricaoClima(clima)
+        print(f"{text}")
+        print(f"Nele, um {monstro.Nome_especie.nome} dorme sobre uma pilha de comidas e ouro, dentre eles as coisas do grupo\nO que fazer?")
+        print(f"1. Pegar as coisas, despercebido")
+        print(f"2. Lutar contra a criatura")
+        opcao = int(input("R: "))
+
+        match opcao:
+            case 1:
+                testegrupo = self.TesteDestreza(grupo)
+                testeMonstro = monstro.destreza
+
+                if testegrupo >= testeMonstro:
+                    print(f"""
+                    🕶️ Com movimentos silenciosos e respiração contida, o grupo rasteja até a pilha de tesouros.
+
+                    O {monstro.Nome_especie.nome} ressona pesadamente, alheio à ousadia que ocorre ao seu redor.
+                    Um por um, os itens do grupo são recuperados, junto de algumas moedas extras como bônus por tamanha coragem.
+
+                    🏃‍♂️ Antes que o monstro se mova, eles escapam — ilesos, enriquecidos, e com uma boa história para contar.
+                    """)
+                    grupo.loot = lootGrupo 
+                else:
+                    print(f"""
+                    O grupo tenta se mover furtivamente, mas um passo em falso quebra um osso seco sob os pés de um dos membros...
+
+                    O {monstro.Nome_especie.nome} desperta com um rugido aterrador, seus olhos brilhando de fúria.
+                    Em segundos, o campo se transforma em caos.
+
+                    A única opção é correr! Desarmados e sem os pertences, o grupo foge desesperadamente pela floresta, deixando para trás tudo o que possuíam.
+                    """)
+            case 2:
+                resultado = self.lutarMonstro(grupo,monstro)
+
+                match resultado:
+                    case True:
+                        print(f"""
+                            > A vitória pertence aos bravos!
+
+                            Após uma luta árdua e sangrenta, o grupo enfim tombou a fera lendária: {monstro.Nome_especie.nome}. 
+                            Com espadas em chamas e feitiços trovejantes, desafiaram o impossível — e triunfaram. 
+                            O monstro caiu com um rugido que sacudiu as montanhas, e então... apenas poeira.
+
+                            Os heróis se erguem entre os escombros, feridos, mas vitoriosos. A(O) {monstro.Nome_especie.nome} agora é apenas um sussurro nas sombras.
+                            """)
+                        
+                        
+                        grupo.loot = lootGrupo
+
+                    case False:
+                        print(f"""
+                            > A batalha chegou ao fim... e não a favor dos heróis.
+
+                            Sob os rugidos ensurdecedores da besta conhecida como {monstro.Nome_especie.nome}, o chão tremeu e o céu escureceu. 
+                            Um a um, os membros do grupo caíram — suas armas partidas, seus gritos engolidos pela fúria do monstro. 
+                            O último guerreiro tentou resistir, sangue nos olhos e esperança no peito... mas foi em vão.
+
+                            No último de seus esforços, eles fugiram antes que fosse tarde
+                            """)
+
+        self.Encerrou = True
+
+    def procurar(self,grupo,monstro):
+        testegrupo = self.TesteDestreza(grupo)
+        testeMonstro = monstro.destreza
+
+        self.procurou = True
+
+        if testegrupo >= testeMonstro:
+            print(f"> O grupo conseguiu encontrar um rasto da criatura")
+            self.confronto(grupo,monstro)
+        else:
+            print(f"{Fore.RED}> Infelizmente, não há traços de onde o ladrão possa ter ido")
+
+    def divinacao(self,grupo,monstro):
+        
+        testegrupo = self.TesteInteligencia(grupo)
+        testeMonstro = monstro.inteligencia
+
+        self.Divinacao = True
+
+        if testegrupo >= testeMonstro:
+            print(f"> O grupo conseguiu a resposta vinda dum {random.choice(["Deus","Espirito"])} de onde a criatura está")
+            self.confronto(grupo,monstro)
+        else:
+            print(f"{Fore.RED}> Infelizmente, o grupo não conseguiu nenhuma resposta dos espiritos ou deuses")
+
+
+def Clima_regiao(regiao):
+    media_temp = (regiao.temperatura[0]["tempMax"] + regiao.temperatura[0]["tempMin"]) / 2
+
+    if media_temp < -20:
+        clima = "Congelada"
+    elif -20 <= media_temp < 0:
+        clima = "Fria"
+    elif 0 <= media_temp < 20:
+        clima = "Brumosa"
+    elif 20 <= media_temp < 35:
+        clima = "Quente"
+    else:
+        clima = "Escaldante"
+    
+    return clima
+
+def sortear_comida(grupo):
+    quantidade = random.randint(1, len(grupo.regiao.vegetacao) - 1)
+    comidas = random.sample(grupo.regiao.vegetacao, quantidade)
+    return comidas, quantidade
+
+def sortear_recursos():
+    recursos = [espada, armadura, escudo, adorno, Tapecaria, vasos]
+    quantidade = random.randint(1, len(recursos) - 1)
+    recursos_sorteados = random.sample(recursos, quantidade)
+    return recursos_sorteados, quantidade
+
+def distribuir_comida(comidas,grupo, quantidade_comida):
+    quantidade_por_item = max(1, quantidade_comida // len(comidas))
+    constr = None
+    for construcao in grupo.reino.construcoes:
+        if isinstance(construcao, Armazem_Comida):
+            constr = construcao
+    
+    for comida_classe in comidas:
+        tem = False
+        for item in constr.inventario:
+            if isinstance(item.nome, comida_classe):
+                tem = True
+                item.quantidade += quantidade_por_item
+        if tem is False:
+            constr.inventario.append(Estoque(comida_classe(),quantidade_por_item))
+
+def distribuir_recursos(recursos,grupo, quantidade_total):
+    materiais_classes = [Madeira, Pedra, Cobre, Argila, Vidro, Bronze, Obsidiana, Cristal]
+    quantidade_por_item = max(1, quantidade_total // len(recursos))
+    constr = None
+    for construcao in grupo.reino.construcoes:
+        if isinstance(construcao, Armazem_materiais):
+            constr = construcao
+        
+    for recurso_classe in recursos:
+        tem = False
+        material = random.choice(materiais_classes)()
+        print(material)
+        recurso_instancia = recurso_classe(material)
+
+        for item in constr.inventario:
+            if isinstance(item.nome, recurso_classe):
+                tem = True
+                item.quantidade += quantidade_por_item
+        
+        if tem is False:
+            constr.inventario.append(Estoque(recurso_instancia,quantidade_por_item))
+
+def lootGrupo(grupo):
+    comidas, qtd_comidas = sortear_comida(grupo)
+    recursos, qtd_recursos = sortear_recursos()
+    quantidade_ouro = random.randint(3, 20)
+
+    distribuir_comida(comidas,grupo, qtd_comidas)
+    distribuir_recursos(recursos,grupo, qtd_recursos)
+                    
+    print(f"\n{Fore.YELLOW + Style.BRIGHT}======|            VITÓRIA!          |======{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}Você saqueou {quantidade_ouro} moedas de ouro.{Style.RESET_ALL}\n")
+
+    print(f"{Fore.GREEN + Style.BRIGHT}>> Comida Coletada:{Style.RESET_ALL}")
+    for comida in comidas:
+        print(f"{Fore.GREEN}- {comida.__name__}: {qtd_comidas // len(comidas)} unidades{Style.RESET_ALL}")
+
+    print(f"\n{Fore.CYAN + Style.BRIGHT}>> Itens Criados:{Style.RESET_ALL}")
+    for recurso in recursos:
+        print(f"{Fore.CYAN}- {recurso.__name__}: {qtd_recursos // len(recursos)} unidade(s){Style.RESET_ALL}")
+                            
 #class circulo_aprizionamento(localizacao_Especial):

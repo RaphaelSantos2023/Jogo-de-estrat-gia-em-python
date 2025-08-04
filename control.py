@@ -1,4 +1,4 @@
-from model.Estoque.estoque import Estoque,Estoque_semente
+from model.Estoque.estoque import Estoque,Estoque_semente,Dado_espedicao
 from model.Meteriais.planta import Arvore, Macieira, Arbusto
 from model.Meteriais.Cenario import Pedregulho
 from model.Meteriais.construcao import Posto_Comercio, Armazem,Armazem_Comida,Armazem_materiais,Demanda_tempo,Templo
@@ -21,7 +21,7 @@ from model.Meteriais.comida import (
 )
 
 from model.SobreMundo.Eventos import Evento
-from model.SobreMundo.Reinos import Reino,Cultura,Ruinas_antigas,Reino_perdido,Exploracao
+from model.SobreMundo.Reinos import Reino,Cultura,Ruinas_antigas,Reino_perdido,Exploracao,Tribo_Encontro,Roubo_item,localizacao_Especial
 from model.SobreMundo.Racas import Raca, Criatura
 from model.SobreMundo.Religiao import Religiao
 from model.SobreMundo.mundo import Mundo, Regioes,Historia
@@ -371,27 +371,39 @@ class Control:
         self.Evento_Definir(reino,relogio,pausado,matriz)
         
         for expedicao in reino.expedicoes:
-            if relogio.dia - expedicao["Dia inicial"] == expedicao["Dias"] and expedicao["Grupo"].Explorando:
+            if relogio.dia - expedicao.Dia_inicio == expedicao.tempo and expedicao.grupo.Explorando:
                 
-                self.tela("Exploração")
-                expedicao["Local"].Aventura(expedicao["Grupo"])
+                if isinstance(expedicao.local,localizacao_Especial):
+                    self.tela("Exploração")
+                expedicao.local.Aventura(expedicao.grupo)
 
-                expedicao["Grupo"].Explorando = False
-                expedicao["Grupo"].Voltando = True
+                expedicao.grupo.Explorando = False
+                expedicao.grupo.Voltando = True
 
-                print(f"{Fore.LIGHTYELLOW_EX}> Pressione qualquer tecla para continuar")
-                self.getch()
+                if isinstance(expedicao.local,localizacao_Especial):
+                    print(f"{Fore.LIGHTYELLOW_EX}> Pressione qualquer tecla para continuar")
+                    self.getch()
 
-            elif relogio.dia - expedicao["Dia inicial"] == expedicao["Dias"]*2 and expedicao["Grupo"].Voltando:
+            elif relogio.dia - expedicao.Dia_inicio == expedicao.tempo*2 and expedicao.grupo.Voltando:
                 self.tela("O Bom filho volta a casa!")
 
-                for integrante in expedicao["Grupo"].membros:
-                    integrante["Nome"].Dentro_estrutura = False
-                    integrante["Nome"].explorando = False
+                print(f"> A equipe voltou ao reino")
+                
+                if not isinstance(expedicao.local, localizacao_Especial):
+                    expedicao.local.Aventura(expedicao.grupo)
+                if expedicao.grupo.loot != None:
+                    expedicao.grupo.loot()
+                else:
+                    for integrante in expedicao.grupo.membros:
+                        if integrante.posicao == "Lider":
+                            lider = integrante.pessoa.nome
+                    print(f"> O grupo liderado pelo(a) {Fore.LIGHTYELLOW_EX}{lider}{Style.RESET_ALL} não teve muita sorte na expedição")
+
+                for integrante in expedicao.grupo.membros:
+                    integrante.pessoa.Dentro_estrutura = False
+                    integrante.pessoa.explorando = False
                 
                 reino.expedicoes.remove(expedicao)
-
-                print(f"> A equipe voltou ao reino")
                 print(f"{Fore.LIGHTYELLOW_EX}> Pressione qualquer tecla para continuar")
                 self.getch()
         
@@ -620,15 +632,15 @@ class Control:
         grupo.regiao = self.RegioesList[opcao]
 
         for pessoa in grupo.membros:
-            pessoa["Nome"].Dentro_estrutura = True
-            pessoa["Nome"].explorando = True
+            pessoa.pessoa.Dentro_estrutura = True
+            pessoa.pessoa.explorando = True
 
         if chance_encontro <= self.chance_encontrar_estrutura:
             local = random.choice(self.RegioesList[opcao].Estruturas)           
         else:
             local = Exploracao(self.Mundo_criado)
         
-        reino.expedicoes.append({"Grupo": grupo , "Local": local,"Dias": tempo, "Dia inicial": relogio.dia, "Ano inicio": relogio.ano,"Data":relogio.mostrar_data()})
+        reino.expedicoes.append(Dado_espedicao(grupo,local,tempo,relogio.dia,relogio.ano,relogio.mostrar_data()))
 
         print("> O grupo saiu em viagem...")
 
@@ -989,7 +1001,170 @@ class Control:
         monstros = self.MonstrosList
         racas = self.Racas
         regioes = self.RegioesList
-        return Mundo(nome,reinos,monstros,racas,regioes,self.Religiao_mundo,self.Cultura_Lista)
+        return Mundo(nome,reinos,monstros,racas,regioes,self.Religiao_mundo,self.Cultura_Lista,self.retornarCriaturas())
+
+    def retornarCriaturas(self):
+        # Criaturas Míticas
+        dragao = Raca(
+            nome="Dragão",
+            simbolo="🔥",
+            vida=300,
+            dano=50,
+            altura="5m a 20m",
+            aparencia="corpo imenso coberto por escamas, asas gigantescas, olhos brilhantes",
+            forca=10,
+            destreza=6,
+            inteligencia=8,
+            carisma=7,
+            constituicao=10
+        )
+
+        quimera = Raca(
+            nome="Quimera",
+            simbolo="🐉🦁🐐",
+            vida=220,
+            dano=40,
+            altura="3m",
+            aparencia="corpo com partes de leão, cabra e serpente",
+            forca=9,
+            destreza=5,
+            inteligencia=4,
+            carisma=2,
+            constituicao=8
+        )
+
+        griffo = Raca(
+            nome="Grifo",
+            simbolo="🦅🦁",
+            vida=180,
+            dano=30,
+            altura="2.5m",
+            aparencia="corpo de leão com cabeça e asas de águia",
+            forca=7,
+            destreza=9,
+            inteligencia=6,
+            carisma=5,
+            constituicao=6
+        )
+
+        # Criaturas das Sombras
+        hidra = Raca(
+            nome="Hidra",
+            simbolo="🐍🐍🐍",
+            vida=250,
+            dano=45,
+            altura="4m",
+            aparencia="serpente gigante com várias cabeças regenerativas",
+            forca=9,
+            destreza=4,
+            inteligencia=3,
+            carisma=2,
+            constituicao=10
+        )
+
+        espectro = Raca(
+            nome="Espectro",
+            simbolo="👻",
+            vida=120,
+            dano=25,
+            altura="1.8m (etéreo)",
+            aparencia="figura fantasmagórica envolta em névoa negra",
+            forca=2,
+            destreza=8,
+            inteligencia=7,
+            carisma=6,
+            constituicao=3
+        )
+
+        basilisco = Raca(
+            nome="Basilisco",
+            simbolo="🐍👁️",
+            vida=210,
+            dano=38,
+            altura="3m",
+            aparencia="lagarto gigante com olhar petrificante",
+            forca=7,
+            destreza=6,
+            inteligencia=5,
+            carisma=1,
+            constituicao=9
+        )
+
+        # Bestas Elementais
+        elemental_fogo = Raca(
+            nome="Elemental do Fogo",
+            simbolo="🔥",
+            vida=160,
+            dano=40,
+            altura="2m a 4m",
+            aparencia="ser feito inteiramente de chamas vivas",
+            forca=6,
+            destreza=7,
+            inteligencia=6,
+            carisma=4,
+            constituicao=6
+        )
+
+        elemental_gelo = Raca(
+            nome="Elemental do Gelo",
+            simbolo="❄️",
+            vida=170,
+            dano=35,
+            altura="2.2m",
+            aparencia="figura humanoide cristalizada com vapor frio ao redor",
+            forca=5,
+            destreza=6,
+            inteligencia=7,
+            carisma=3,
+            constituicao=7
+        )
+
+        # Bestas Terrenas
+        troll = Raca(
+            nome="Troll",
+            simbolo="🪨",
+            vida=250,
+            dano=28,
+            altura="2.8m",
+            aparencia="criatura gigante, de pele esverdeada e músculos grossos",
+            forca=9,
+            destreza=3,
+            inteligencia=2,
+            carisma=1,
+            constituicao=9
+        )
+
+        arakora = Raca(
+            nome="Arakora",
+            simbolo="🦅",
+            vida=140,
+            dano=22,
+            altura="1.9m",
+            aparencia="ser alado com traços de águia e corpo humanoide",
+            forca=5,
+            destreza=9,
+            inteligencia=6,
+            carisma=6,
+            constituicao=4
+        )
+
+        minotauro = Raca(
+            nome="Minotauro",
+            simbolo="🐂",
+            vida=230,
+            dano=33,
+            altura="2.5m",
+            aparencia="corpo humanoide musculoso com cabeça de touro",
+            forca=10,
+            destreza=4,
+            inteligencia=3,
+            carisma=2,
+            constituicao=8
+        )
+    
+        return [dragao,quimera,griffo,hidra,espectro,basilisco,elemental_fogo,elemental_gelo,troll,arakora,minotauro]
+
+
 
     def criarRegioes(self):
         temperaturas = []
@@ -1004,9 +1179,12 @@ class Control:
             reinos = self.selecionarReinos()
 
             riqueza_mineral = tipo["minerios"]/100
-            temperaturas.append(temperatura)    
+            temperaturas.append(temperatura)
 
-            regiao = Regioes(nome,tipo,animais,reinos,temperatura,vegetal,riqueza_mineral)
+            quantidade_criatura = random.randint(3,len(self.retornarCriaturas())-1)
+            
+            criaturas = random.sample(self.retornarCriaturas(),quantidade_criatura)
+            regiao = Regioes(nome,tipo,animais,reinos,temperatura,vegetal,riqueza_mineral,criaturas)
             self.RegioesList.append(regiao)
         
         for regiao in self.RegioesList:
@@ -1018,7 +1196,8 @@ class Control:
         for regiao in self.RegioesList:
             def gerar_local(regiao):
                 quantidade = random.randint(10,30)
-                locais = [Ruinas_antigas,Reino_perdido]
+                #Reino_perdido,Tribo_Encontro,
+                locais = [Ruinas_antigas,Roubo_item]
 
                 for i in range(quantidade):
                     local = random.choice(locais)

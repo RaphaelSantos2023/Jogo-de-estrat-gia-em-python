@@ -162,8 +162,8 @@ class DeusMorte(Deuses):
         super().__init__("Morte",raca)
         self.Bencao_Descricao = {
             "Ordem": "Permite recuperar alguém recém-morto.",
-            "Neutro": "Espalha doenças naturais pelo território.",
-            "Caos": "Libera uma praga sobrenatural devastadora."
+            "Neutro": "Ressucitar membros de exercitos mortos para seu reino.",
+            "Caos": "Matar um lidér de facção de outro reino."
         }
 
     def Bencao_Ordem(self, alvo, intensidade):

@@ -3,7 +3,7 @@ from colorama import Fore, Style, init
 from model.SobreMundo.Reinos import Faccoes
 
 class Mundo:
-  def __init__(self,nome,reinos,monstros,racas,regioes,religiao,culturas):
+  def __init__(self,nome,reinos,monstros,racas,regioes,religiao,culturas,criaturas):
     self.nome = nome
     self.reinos = reinos
     self.monstros = monstros
@@ -12,6 +12,7 @@ class Mundo:
     self.religiao = religiao
     self.culturas = culturas
     self.estruturas = []
+    self.criaturas = criaturas
 
   def descricao(self):
     print("\n\n------ Reinos ------------------------------\n\n")
@@ -28,7 +29,7 @@ class Mundo:
       print(self.regioes[i].Descricao())
 
 class Regioes:
-    def __init__(self, nome, tipo, animais, reinos, temperatura, vegetacao, riqueza_mineral):
+    def __init__(self, nome, tipo, animais, reinos, temperatura, vegetacao, riqueza_mineral,Criaturas):
         self.nome = nome
         self.tipo = tipo  # Esperado: dicionário com a chave 'nome'
         self.animais = animais  # Lista de classes (a serem instanciadas em monstrarAnimais)
@@ -37,6 +38,7 @@ class Regioes:
         self.Estruturas = []  # Lista vazia de estruturas (podem ser adicionadas depois)
         self.reinos = reinos  # Lista de objetos com atributo 'nome'
         self.temperatura = temperatura
+        self.Criaturas = Criaturas
 
     def mostrar_animais(self):
         texto = ""
@@ -52,6 +54,12 @@ class Regioes:
         text += f"\n    • {Fore.GREEN}{vegetacao.nome}"
       return text + f"{Style.RESET_ALL}"
 
+    def mostrar_monstros(self):
+      text = "Monstros:\n"
+      for monstro in self.Criaturas:
+        text += f"   • {monstro.simbolo} = {monstro.nome}\n"
+      return text
+
     def Descricao(self):
         descricao = (
             f"🌍 Região: {self.nome}\n"
@@ -66,7 +74,10 @@ class Regioes:
             for reino in self.reinos:
                 descricao += f"\n  • {reino.nome}"
         else:
-            descricao += "\n  Nenhum reino registrado."
+            descricao += "\n  Nenhum reino registrado.\n"
+
+        descricao += self.mostrar_monstros()
+
         return descricao + "\n"
 
 class Relogio:

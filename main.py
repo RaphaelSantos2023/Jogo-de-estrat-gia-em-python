@@ -19,6 +19,7 @@ from model.Animais.animal_sapiente import personalidade
 from model.SobreMundo.mundo import Relogio
 from model.SobreMundo.Reinos import Equipe_exploracao
 import select
+from model.Estoque.estoque import Membro_espedicao
 from model.Animais.profisoes import Minerador, Lenhador, Pescador, Fazendeiro
 #from construcoes import *
 
@@ -280,9 +281,9 @@ class main:
     def ordemMenu(self):
         while True:
             self.tituloDoMenu("🛡️ Menu de Ordens")
-            print("1. Designar Profissão")
-            print("2. Criar Ordens")
-            print("3. Voltar")
+            print(f"{Fore.CYAN}1{Style.RESET_ALL}. Designar Profissão")
+            print(f"{Fore.CYAN}2{Style.RESET_ALL}. Criar Ordens")
+            print(f"{Fore.RED}3. Voltar")
 
             #try:
             opcao = int(input('R: '))
@@ -625,25 +626,29 @@ class main:
             if opcao_aceitar == 1:
                 print("Adicionou")
                 if Equipe.membros == []:
-                    Equipe.membros.append({"Nome": pessoa, "Cargo": "Lider"})
+                    Equipe.membros.append(Membro_espedicao(pessoa,"Lider"))
                 else:
-                    Equipe.membros.append({"Nome": pessoa, "Cargo": "Membro"})
+                    Equipe.membros.append(Membro_espedicao(pessoa,"Membro"))
             
             self.getch()
         
-        exploradores_potencial = []
+        def Pegar_Quem_Explora():
+            exploradores_potencial = []
 
-        for pessoa in self.reino_Jogador.cidadaos:
-            if pessoa.servico_militar is False and pessoa.explorando is False:
-                exploradores_potencial.append(pessoa)
-                
+            for pessoa in self.reino_Jogador.cidadaos:
+                if pessoa.servico_militar is False and pessoa.explorando is False:
+                    exploradores_potencial.append(pessoa)
+            return exploradores_potencial
+        
+        exploradores_potencial = Pegar_Quem_Explora()
+
         while opcao !=  len(exploradores_potencial):
             self.limpar_tela()
             self.tituloDoMenu(" Exploração ")
             print("Quem será parte dessa espedição?")
 
             for i,pessoa in enumerate(exploradores_potencial):
-                if any(m["Nome"] == pessoa for m in Equipe.membros):
+                if any(m.pessoa == pessoa for m in Equipe.membros):
                     cor = Fore.LIGHTBLACK_EX
                 else:
                     cor = Fore.CYAN
@@ -651,7 +656,7 @@ class main:
                 print(f"{cor}{i}. {pessoa.nome}")
             print(f"{Fore.LIGHTRED_EX}{len(exploradores_potencial)} Voltar")
             if Equipe.membros != []:
-                print(f"{len(exploradores_potencial)+1} Continuar")
+                print(f"{Fore.LIGHTYELLOW_EX}{len(exploradores_potencial)+1} Continuar")
             
             opcao = int(input("R: "))
 
@@ -661,6 +666,8 @@ class main:
                 self.limpar_tela()
                 self.tituloDoMenu(" Região ")
                 self.control.escolher_regiao(Equipe,self.reino_Jogador,self.relogio)
+                exploradores_potencial = Pegar_Quem_Explora()
+                Equipe = Equipe_exploracao(self.reino_Jogador)
         
     def Militar_menu(self):
         opcao = -1
@@ -688,18 +695,21 @@ class main:
 
     def Militar(self):
         opcao = -12
-        while opcao != len(self.reino_Jogador.cidadaos):
-            def pegarCandidados():
+
+        def pegarCandidados():
                 cidadaos = []
                 for cidadao in self.reino_Jogador.cidadaos:
                     if cidadao.explorando is False:
                         cidadaos.append(cidadao)
                 return cidadaos
+        
+        cidadaos = pegarCandidados()
+
+        while opcao != len(cidadaos):
+            
                 
             self.limpar_tela()
             self.tituloDoMenu("🏰 Soldados")
-            
-            cidadaos = pegarCandidados()
             for i in range(len(cidadaos)):
                 txt = f"{Fore.CYAN}{i}{Style.RESET_ALL}. {cidadaos[i].nome} - "
 
@@ -845,7 +855,7 @@ class main:
             for construcao in self.reino_Jogador.construcoes:
                 if construcao.nome == "Armazem de comida":
                     for item in construcao.inventario:
-                        if isinstance(item['Nome'], type(semente)):
+                        if isinstance(item.nome, type(semente)):
                             return True
             return False
         

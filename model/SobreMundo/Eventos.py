@@ -91,23 +91,36 @@ class Evento:
             jogador.exercito.selecionar_soldados_ativos()
             quantidade_ativos = self.contar_ativos(jogador.exercito.exercito)
 
-            return {
-                "descricao": lambda: f"O {Fore.RED}{exercito_invasor.nome}{Style.RESET_ALL}, um exercito de {Fore.RED} {len(exercito_invasor.exercito)} {raca.nome} {Style.RESET_ALL} marchão em sua direção.\nCom o ataque, dos {Fore.GREEN}{len(jogador.exercito.exercito)}{Style.RESET_ALL}, conseguimos reunir {Fore.GREEN}{quantidade_ativos}{Style.RESET_ALL}.\nO que devemos fazer?",
-                "opcoes": [
-                    (
-                        f"Avançar",
-                        lambda j: self.Combater(jogador.exercito,exercito_invasor,"Avançar",jogador,mapa)
-                    ),
-                    (
-                        f"Manter posição",
-                        lambda j: self.Combater(jogador.exercito,exercito_invasor,"Manter posição",jogador,mapa)
-                    ),
-                    (
-                        f"Berserker",
-                        lambda j: self.Combater(jogador.exercito,exercito_invasor,"Berserker",jogador,mapa)
-                    )
-                ]
-            }
+            if quantidade_ativos >0:
+              return {
+                  "descricao": lambda: f"O {Fore.RED}{exercito_invasor.nome}{Style.RESET_ALL}, um exercito de {Fore.RED} {len(exercito_invasor.exercito)} {raca.nome} {Style.RESET_ALL} marchão em sua direção.\nCom o ataque, dos {Fore.GREEN}{len(jogador.exercito.exercito)}{Style.RESET_ALL}, conseguimos reunir {Fore.GREEN}{quantidade_ativos}{Style.RESET_ALL}.\nO que devemos fazer?",
+                  "opcoes": [
+                      (
+                          f"Avançar",
+                          lambda j: self.Combater(jogador.exercito,exercito_invasor,"Avançar",jogador,mapa)
+                      ),
+                      (
+                          f"Manter posição",
+                          lambda j: self.Combater(jogador.exercito,exercito_invasor,"Manter posição",jogador,mapa)
+                      ),
+                      (
+                          f"Berserker",
+                          lambda j: self.Combater(jogador.exercito,exercito_invasor,"Berserker",jogador,mapa)
+                      )
+                  ]
+              }
+            else:
+              combate = Combate()
+
+              return {
+                  "descricao": lambda: f"O {Fore.RED}{exercito_invasor.nome}{Style.RESET_ALL}, um exercito de {Fore.RED} {len(exercito_invasor.exercito)} {raca.nome} {Style.RESET_ALL} marchão em sua direção.\nPor conta de não ter soldados preparados para o ataque, os invasores arrazaram, sem ressitencia, o reino.",
+                  "opcoes": [
+                      (
+                          f"Relatorio das perdas",
+                          lambda j: combate.Metodo_derrota(jogador,exercito_invasor,mapa)
+                      ),
+                  ]
+              }
         # Evento: Pessoa quer entrar no reino
         def evento_pessoa_pede_moradia():
             regiao = self.getRegiaoJogador(mundo, jogador)
@@ -131,10 +144,10 @@ class Evento:
             return {
                 "descricao": lambda: f"Um grupo de {raca.nome} aparece em seu territorio\nEles querem permissão para passar, em troca eles oferecem um de três presentes:",
                 "opcoes": [
-                    ("Riquezas", lambda j: self.Passagem_metodo(1,raca,jogador,mapa,regiao)),
-                    ("Alguns Animais", lambda j: self.Passagem_metodo(2,raca,jogador,mapa,regiao)),
-                    ("Uma Benção", lambda j: self.Passagem_metodo(3,raca,jogador,mapa,regiao)),
-                    ("Recusar e atacar", lambda j: self.Passagem_metodo(4,raca,jogador,mapa,regiao))
+                    ("Riquezas", lambda j: self.Passagem_metodo(1,raca,jogador,mapa,regiao,mundo)),
+                    ("Alguns Animais", lambda j: self.Passagem_metodo(2,raca,jogador,mapa,regiao,mundo)),
+                    ("Uma Benção", lambda j: self.Passagem_metodo(3,raca,jogador,mapa,regiao,mundo)),
+                    ("Recusar e atacar", lambda j: self.Passagem_metodo(4,raca,jogador,mapa,regiao,mundo))
                 ]
             }
 
@@ -252,7 +265,7 @@ class Evento:
     self.limpar_tela()
     combate.rodada(jogador, inimigo, tatica_jogador=tatica_jogador, tatica_inimigo=tatica_inimigo,jogador=reino_jogador,mapa=mapa)
   
-  def Passagem_metodo(self,escolha,raca,jogador,mapa,regiao):
+  def Passagem_metodo(self,escolha,raca,jogador,mapa,regiao,mundo):
     match escolha:
       case 1:
           ouro_add = random.randint(5,30)
@@ -273,39 +286,53 @@ class Evento:
       case 4:
         exercito_invasor = Exercito()
 
-        exercito_invasor.CriarExercito_Invasao(raca,jogador)
+        exercito_invasor.CriarExercito_Invasao(raca,mundo.religiao.deuses,jogador)
               
         exercito_invasor.selecionar_soldados_ativos()
               
         jogador.exercito.selecionar_soldados_ativos()
         
         quantidade_ativos = self.contar_ativos(jogador.exercito.exercito)
+        if quantidade_ativos >0:
+          array = {
+                    "descricao": lambda: f"Os {Fore.RED}{len(exercito_invasor.exercito)} {raca.nome}s {Style.RESET_ALL} se preparam para lutar.\nCom o ataque, dos {Fore.GREEN}{len(jogador.exercito.exercito)}{Style.RESET_ALL}, conseguimos reunir {Fore.GREEN}{quantidade_ativos}{Style.RESET_ALL}.\nO que devemos fazer?",
+                    "opcoes": [
+                        (
+                            f"Avançar",
+                            lambda j: self.Combater(jogador.exercito,exercito_invasor,"Avançar",jogador,mapa)
+                        ),
+                        (
+                            f"Manter posição",
+                            lambda j: self.Combater(jogador.exercito,exercito_invasor,"Manter posição",jogador,mapa)
+                        ),
+                        (
+                            f"Berserker",
+                            lambda j: self.Combater(jogador.exercito,exercito_invasor,"Berserker",jogador,mapa)
+                        )
+                    ]
+                }
+          
+          
+        else:
+          combate = Combate()
 
-        array = {
-                  "descricao": lambda: f"Os {Fore.RED}{len(exercito_invasor.exercito)} {raca.nome}s {Style.RESET_ALL} se preparam para lutar.\nCom o ataque, dos {Fore.GREEN}{len(jogador.exercito.exercito)}{Style.RESET_ALL}, conseguimos reunir {Fore.GREEN}{quantidade_ativos}{Style.RESET_ALL}.\nO que devemos fazer?",
-                  "opcoes": [
-                      (
-                          f"Avançar",
-                          lambda j: self.Combater(jogador.exercito,exercito_invasor,"Avançar",jogador,mapa)
-                      ),
-                      (
-                          f"Manter posição",
-                          lambda j: self.Combater(jogador.exercito,exercito_invasor,"Manter posição",jogador,mapa)
-                      ),
-                      (
-                          f"Berserker",
-                          lambda j: self.Combater(jogador.exercito,exercito_invasor,"Berserker",jogador,mapa)
-                      )
-                  ]
-              }
+          array = {
+            "descricao": lambda: f"O {Fore.RED}{exercito_invasor.nome}{Style.RESET_ALL}, um exercito de {Fore.RED} {len(exercito_invasor.exercito)} {raca.nome} {Style.RESET_ALL} marchão em sua direção.\nPor conta de não ter soldados preparados para o ataque, os invasores arrazaram, sem ressitencia, o reino.",
+            "opcoes": [
+              (
+                f"Relatorio das perdas",
+                lambda j: combate.Metodo_derrota(jogador,exercito_invasor,mapa)
+              ),
+            ]
+          }
         
         print(array["descricao"]())
         for i, (texto_opcao, _) in enumerate(array["opcoes"]):
-            print(f"{i+1}) {texto_opcao}")
+          print(f"{i+1}) {texto_opcao}")
 
         escolha = input("Sua decisão: ")
 
-          #try:
+        #try:
         _, acao = array["opcoes"][int(escolha) - 1]
         acao(jogador)
         self.ativo = False

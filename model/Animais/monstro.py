@@ -171,3 +171,4 @@ poderes = [
     {"Nome": "cuspe ácido", "Metodo": cuspe_acido},
     {"Nome": "regeneração", "Metodo": regeneracao}
 ]
+
